@@ -1,0 +1,353 @@
+"use client";
+
+import React, { useState, useMemo } from "react";
+import {
+  Plus,
+  CheckCircle2,
+  FileText,
+  Search,
+  X,
+  ChevronDown,
+  ArrowUpDown,
+  Filter,
+} from "lucide-react";
+import { RentalOrder, Customer, Generator } from "@/lib/db/schema";
+import { RentalOrderCard } from "./rental-order-card";
+import { NewRentalOrderModal } from "./new-rental-order-modal";
+import { DeleteRentalOrderModal } from "./delete-rental-order-modal";
+import {
+  createRentalOrder,
+  markRentalOrderCompleted,
+  deleteRentalOrder,
+  CreateRentalOrderInput,
+} from "@/app/rentals/actions";
+
+interface RentalsViewProps {
+  initialOrders: RentalOrder[];
+  customers: Customer[];
+  generators: Generator[];
+}
+
+export function RentalsView({
+  initialOrders,
+  customers,
+  generators,
+}: RentalsViewProps) {
+  const [orders, setOrders] = useState<RentalOrder[]>(initialOrders);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<RentalOrder | null>(null);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  // Search, Filter, and Sort states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("order_asc");
+
+  const showNotification = (msg: string) => {
+    setNotification(msg);
+    setTimeout(() => {
+      setNotification(null);
+    }, 4000);
+  };
+
+  const handleCreateOrder = async (data: CreateRentalOrderInput) => {
+    const res = await createRentalOrder(data);
+    if (res.success && res.data) {
+      const created = res.data as RentalOrder;
+      setOrders((prev) => [...prev, created]);
+      showNotification(`Rental order ${created.orderNumber} created successfully`);
+      return { success: true };
+    }
+    return { success: false, error: res.error || "Failed to create rental order" };
+  };
+
+  const handleMarkCompleted = async (id: number) => {
+    const res = await markRentalOrderCompleted(id);
+    if (res.success && res.data) {
+      const updated = res.data as RentalOrder;
+      setOrders((prev) =>
+        prev.map((o) => (o.id === id ? { ...o, status: "Completed" } : o))
+      );
+      showNotification(`Rental order ${updated.orderNumber} marked as completed`);
+    } else {
+      alert(res.error || "Failed to mark order completed");
+    }
+  };
+
+  const handleDeleteConfirm = async (id: number) => {
+    const res = await deleteRentalOrder(id);
+    if (res.success) {
+      setOrders((prev) => prev.filter((o) => o.id !== id));
+      showNotification("Rental order deleted successfully");
+    } else {
+      alert(res.error || "Failed to delete rental order");
+    }
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("All");
+    setTypeFilter("All");
+    setSortBy("order_asc");
+  };
+
+  const hasActiveFilters =
+    searchQuery.trim() !== "" ||
+    statusFilter !== "All" ||
+    typeFilter !== "All" ||
+    sortBy !== "order_asc";
+
+  // Filtered and Sorted Orders
+  const filteredAndSortedOrders = useMemo(() => {
+    let result = [...orders];
+
+    // 1. Search Query Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (o) =>
+          o.orderNumber.toLowerCase().includes(q) ||
+          o.customerName.toLowerCase().includes(q) ||
+          o.generatorName.toLowerCase().includes(q) ||
+          (o.rentalType && o.rentalType.toLowerCase().includes(q))
+      );
+    }
+
+    // 2. Status Filter
+    if (statusFilter !== "All") {
+      result = result.filter(
+        (o) => o.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    // 3. Rental Type Filter
+    if (typeFilter !== "All") {
+      result = result.filter(
+        (o) => o.rentalType?.toLowerCase() === typeFilter.toLowerCase()
+      );
+    }
+
+    // 4. Sorting
+    result.sort((a, b) => {
+      if (sortBy === "order_asc") {
+        return a.orderNumber.localeCompare(b.orderNumber, undefined, { numeric: true });
+      }
+      if (sortBy === "order_desc") {
+        return b.orderNumber.localeCompare(a.orderNumber, undefined, { numeric: true });
+      }
+      if (sortBy === "total_desc") {
+        return Number(b.totalAmount || 0) - Number(a.totalAmount || 0);
+      }
+      if (sortBy === "total_asc") {
+        return Number(a.totalAmount || 0) - Number(b.totalAmount || 0);
+      }
+      if (sortBy === "customer_asc") {
+        return a.customerName.localeCompare(b.customerName);
+      }
+      if (sortBy === "newest") {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      return 0;
+    });
+
+    return result;
+  }, [orders, searchQuery, statusFilter, typeFilter, sortBy]);
+
+  return (
+    <div className="p-8 lg:p-10 max-w-7xl mx-auto space-y-6">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-sm animate-in slide-in-from-top-4 duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{notification}</span>
+        </div>
+      )}
+
+      {/* Top Header Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
+            Rental Orders
+          </h1>
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            Create and manage rental agreements
+          </p>
+        </div>
+
+        {/* New Rental Order Button */}
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>New Rental Order</span>
+        </button>
+      </div>
+
+      {/* Search, Filter, and Sort Controls Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by order ID, customer, generator..."
+            className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full cursor-pointer"
+              title="Clear search"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Status Filter */}
+        <div className="relative shrink-0 min-w-[140px]">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+
+        {/* Rental Type Filter */}
+        <div className="relative shrink-0 min-w-[140px]">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Types</option>
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Monthly">Monthly</option>
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+
+        {/* Sort Option */}
+        <div className="relative shrink-0 min-w-[190px]">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full appearance-none pl-9 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="order_asc">Order ID (Ascending)</option>
+            <option value="order_desc">Order ID (Descending)</option>
+            <option value="total_desc">Total: High to Low</option>
+            <option value="total_asc">Total: Low to High</option>
+            <option value="customer_asc">Customer (A-Z)</option>
+            <option value="newest">Newest First</option>
+          </select>
+          <ArrowUpDown className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+
+        {/* Reset Filters button if any filter active */}
+        {hasActiveFilters && (
+          <button
+            onClick={handleResetFilters}
+            className="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer shrink-0"
+            title="Reset all filters and sorting"
+          >
+            Reset
+          </button>
+        )}
+      </div>
+
+      {/* Results summary if searching or filtering */}
+      {hasActiveFilters && (
+        <div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
+          <span>
+            Showing {filteredAndSortedOrders.length} of {orders.length} orders
+          </span>
+        </div>
+      )}
+
+      {/* Main Content: Card Grid or Empty State */}
+      {orders.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-xs">
+          <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400 mb-4">
+            <FileText className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-800">
+            No rental orders yet
+          </h3>
+          <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+            Get started by creating your first rental agreement for a customer.
+          </p>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold rounded-xl transition-all shadow-xs cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            New Rental Order
+          </button>
+        </div>
+      ) : filteredAndSortedOrders.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-xs">
+          <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400 mb-4">
+            <Filter className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-800">
+            No orders match your filters
+          </h3>
+          <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+            Try adjusting your search keywords, status, or rental type filter.
+          </p>
+          <button
+            onClick={handleResetFilters}
+            className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-all cursor-pointer"
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredAndSortedOrders.map((order) => (
+            <RentalOrderCard
+              key={order.id}
+              order={order}
+              onMarkCompleted={handleMarkCompleted}
+              onDeleteClick={(ord) => setOrderToDelete(ord)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* New Rental Order Modal */}
+      {isAddModalOpen && (
+        <NewRentalOrderModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          customers={customers}
+          generators={generators}
+          onSubmit={handleCreateOrder}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {orderToDelete && (
+        <DeleteRentalOrderModal
+          order={orderToDelete}
+          isOpen={Boolean(orderToDelete)}
+          onClose={() => setOrderToDelete(null)}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
+    </div>
+  );
+}

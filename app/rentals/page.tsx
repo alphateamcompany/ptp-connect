@@ -1,7 +1,21 @@
-export default function RentalsPage() {
+import { getRentalOrders, getFormDataOptions } from "./actions";
+import { RentalsView } from "@/components/rentals/rentals-view";
+
+export const dynamic = "force-dynamic";
+
+export default async function RentalsPage() {
+  const [ordersRes, options] = await Promise.all([
+    getRentalOrders(),
+    getFormDataOptions(),
+  ]);
+
+  const initialOrders = ordersRes.success && ordersRes.data ? ordersRes.data : [];
+
   return (
-    <div className="p-8 lg:p-10">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Rental Orders</h1>
-    </div>
+    <RentalsView
+      initialOrders={initialOrders}
+      customers={options.customers}
+      generators={options.generators}
+    />
   );
 }

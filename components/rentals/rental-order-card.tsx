@@ -1,0 +1,217 @@
+"use client";
+
+import React, { useState } from "react";
+import { Trash2, Loader2 } from "lucide-react";
+import { RentalOrder } from "@/lib/db/schema";
+
+interface RentalOrderCardProps {
+  order: RentalOrder;
+  onMarkCompleted: (id: number) => Promise<void>;
+  onDeleteClick: (order: RentalOrder) => void;
+}
+
+function formatDate(dateStr: string): string {
+  if (!dateStr) return "";
+  // Check if already formatted as "DD Mon YYYY"
+  if (/^\d{2}\s+[A-Za-z]{3}\s+\d{4}$/.test(dateStr)) return dateStr;
+
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return `${day} ${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+function formatINR(amount: number | string | null | undefined): string {
+  const num = Number(amount) || 0;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(num);
+}
+
+export function RentalOrderCard({
+  order,
+  onMarkCompleted,
+  onDeleteClick,
+}: RentalOrderCardProps) {
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const isActive = order.status?.toLowerCase() === "active";
+  const isCompleted = order.status?.toLowerCase() === "completed";
+
+  const handleComplete = async () => {
+    if (isCompleting) return;
+    setIsCompleting(true);
+    try {
+      await onMarkCompleted(order.id);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all duration-200 p-6 flex flex-col justify-between">
+      <div>
+        {/* Top Header Row: Order Number & Status Badge */}
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-semibold text-slate-500 tracking-wide">
+            {order.orderNumber}
+          </span>
+          <span
+            className={`px-3 py-0.5 rounded-full text-xs font-semibold tracking-tight border ${
+              isCompleted
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200/70"
+                : "bg-sky-50 text-sky-700 border-sky-200/70"
+            }`}
+          >
+            {isCompleted ? "Completed" : "Active"}
+          </span>
+        </div>
+
+        {/* Customer & Generator Info */}
+        <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-snug">
+          {order.customerName}
+        </h3>
+        <p className="text-sm font-medium text-slate-500 mt-0.5 mb-5">
+          {order.generatorName}
+        </p>
+
+        {/* Details 2x2 Grid */}
+        <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs sm:text-sm text-slate-600 mb-4">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400 font-normal">Start:</span>
+            <span className="font-bold text-slate-900">
+              {formatDate(order.startDate)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400 font-normal">End:</span>
+            <span className="font-bold text-slate-900">
+              {formatDate(order.endDate)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400 font-normal">Type:</span>
+            <span className="font-bold text-slate-900">
+              {order.rentalType || "Daily"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400 font-normal">Rate:</span>
+            <span className="font-bold text-slate-900">
+              {formatINR(order.dailyRate)}/day
+            </span>
+          </div>
+        </div>
+
+        {/* Inclusions Badges */}
+        {(order.dieselIncluded || order.operatorIncluded) && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            {order.dieselIncluded && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-400 text-slate-950">
+                Diesel Incl.
+              </span>
+            )}
+            {order.operatorIncluded && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-400 text-slate-950">
+                Operator Incl.
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Divider */}
+        <div className="border-t border-slate-100 my-4" />
+
+        {/* Financial Breakdown */}
+        <div className="space-y-1.5 text-sm">
+          <div className="flex items-center justify-between text-slate-500">
+            <span>Rental Charge</span>
+            <span className="font-medium text-slate-900">
+              {formatINR(order.rentalCharge)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-slate-500">
+            <span>GST (18%)</span>
+            <span className="font-medium text-slate-900">
+              {formatINR(order.gstAmount)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-slate-500">
+            <span>Transport</span>
+            <span className="font-medium text-slate-900">
+              {formatINR(order.transportCharges)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <span className="font-bold text-slate-900 text-base">Total</span>
+            <span className="font-bold text-[#083a60] text-lg">
+              {formatINR(order.totalAmount)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Card Actions / Footer */}
+      <div className="mt-6 pt-2">
+        {isActive ? (
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleComplete}
+              disabled={isCompleting}
+              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm transition-colors shadow-2xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            >
+              {isCompleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-slate-600" />
+                  <span>Updating...</span>
+                </>
+              ) : (
+                <span>Mark Completed</span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => onDeleteClick(order)}
+              title="Delete Rental Order"
+              className="p-2.5 rounded-xl border border-rose-200/80 text-rose-500 hover:bg-rose-50 transition-colors shadow-2xs cursor-pointer shrink-0"
+              aria-label="Delete Order"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => onDeleteClick(order)}
+              title="Delete Rental Order"
+              className="p-2.5 rounded-xl border border-rose-200/80 text-rose-500 hover:bg-rose-50 transition-colors shadow-2xs cursor-pointer"
+              aria-label="Delete Order"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, integer, numeric, timestamp, text } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, integer, numeric, timestamp, text, boolean } from "drizzle-orm/pg-core";
 
 export const generators = pgTable("generators", {
   id: serial("id").primaryKey(),
@@ -54,3 +54,49 @@ export type Client = typeof clients.$inferSelect;
 export type NewClient = typeof clients.$inferInsert;
 export type Rental = typeof rentals.$inferSelect;
 export type NewRental = typeof rentals.$inferInsert;
+
+export const customers = pgTable("customers", {
+  id: serial("id").primaryKey(),
+  customerName: varchar("customer_name", { length: 255 }).notNull(),
+  companyName: varchar("company_name", { length: 255 }).notNull(),
+  gstNumber: varchar("gst_number", { length: 50 }),
+  contactPerson: varchar("contact_person", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  email: varchar("email", { length: 255 }),
+  paymentTerms: varchar("payment_terms", { length: 100 }).default("Net 30"),
+  outstandingAmount: numeric("outstanding_amount", { precision: 12, scale: 2 }).default("0"),
+  billingAddress: text("billing_address"),
+  siteAddress: text("site_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type Customer = typeof customers.$inferSelect;
+export type NewCustomer = typeof customers.$inferInsert;
+
+export const rentalOrders = pgTable("rental_orders", {
+  id: serial("id").primaryKey(),
+  orderNumber: varchar("order_number", { length: 50 }).notNull().unique(),
+  customerId: integer("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  customerName: varchar("customer_name", { length: 255 }).notNull(),
+  generatorId: integer("generator_id").references(() => generators.id, { onDelete: "set null" }),
+  generatorName: varchar("generator_name", { length: 255 }).notNull(),
+  startDate: varchar("start_date", { length: 50 }).notNull(),
+  endDate: varchar("end_date", { length: 50 }).notNull(),
+  rentalType: varchar("rental_type", { length: 50 }).notNull().default("Daily"),
+  dailyRate: numeric("daily_rate", { precision: 10, scale: 2 }).notNull(),
+  transportCharges: numeric("transport_charges", { precision: 10, scale: 2 }).default("0"),
+  securityDeposit: numeric("security_deposit", { precision: 10, scale: 2 }).default("0"),
+  dieselIncluded: boolean("diesel_included").default(false).notNull(),
+  operatorIncluded: boolean("operator_included").default(false).notNull(),
+  rentalCharge: numeric("rental_charge", { precision: 12, scale: 2 }).notNull(),
+  gstAmount: numeric("gst_amount", { precision: 12, scale: 2 }).notNull(),
+  totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("Active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type RentalOrder = typeof rentalOrders.$inferSelect;
+export type NewRentalOrder = typeof rentalOrders.$inferInsert;
+
