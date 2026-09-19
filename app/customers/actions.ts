@@ -86,37 +86,10 @@ export async function getCustomers(search?: string) {
     }
 
     const items = await query.orderBy(asc(customers.id));
-
-    if (items.length === 0 && (!search || search.trim() === "")) {
-      // Seed default customers if database table is empty
-      try {
-        const seeded = await db
-          .insert(customers)
-          .values(
-            INITIAL_CUSTOMERS.map((c) => ({
-              customerName: c.customerName,
-              companyName: c.companyName,
-              gstNumber: c.gstNumber,
-              contactPerson: c.contactPerson,
-              phone: c.phone,
-              email: c.email,
-              paymentTerms: c.paymentTerms,
-              outstandingAmount: c.outstandingAmount,
-              billingAddress: c.billingAddress,
-              siteAddress: c.siteAddress,
-            }))
-          )
-          .returning();
-        return { success: true, data: seeded };
-      } catch {
-        return { success: true, data: INITIAL_CUSTOMERS };
-      }
-    }
-
     return { success: true, data: items };
   } catch (error) {
     console.error("Failed to fetch customers from database:", error);
-    return { success: true, data: INITIAL_CUSTOMERS };
+    return { success: false, error: (error as Error).message, data: [] as Customer[] };
   }
 }
 

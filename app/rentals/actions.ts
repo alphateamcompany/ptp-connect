@@ -176,58 +176,13 @@ export async function getRentalOrders(search?: string) {
     }
 
     const items = await query.orderBy(asc(rentalOrders.id));
-
-    if (items.length === 0 && (!search || search.trim() === "")) {
-      // Seed default rental orders if table is empty
-      try {
-        // Ensure customers exist for clean linkage
-        const existingCustomers = await db.select().from(customers);
-        const customerMap = new Map(existingCustomers.map((c) => [c.companyName, c.id]));
-
-        const existingGens = await db.select().from(generators);
-        const genMap = new Map(existingGens.map((g) => [g.name, g.id]));
-
-        const seedRows = INITIAL_RENTAL_ORDERS.map((order) => ({
-          ...order,
-          customerId: customerMap.get(order.customerName) || null,
-          generatorId: genMap.get(order.generatorName) || null,
-        }));
-
-        const seeded = await db
-          .insert(rentalOrders)
-          .values(seedRows)
-          .returning();
-
-        return { success: true, data: seeded };
-      } catch (seedErr) {
-        console.warn("Could not seed rental orders to db, returning mock items:", seedErr);
-        return {
-          success: true,
-          data: INITIAL_RENTAL_ORDERS.map((item, idx) => ({
-            id: idx + 1,
-            ...item,
-            customerId: null,
-            generatorId: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })) as RentalOrder[],
-        };
-      }
-    }
-
     return { success: true, data: items };
   } catch (error) {
     console.error("Failed to fetch rental orders:", error);
     return {
-      success: true,
-      data: INITIAL_RENTAL_ORDERS.map((item, idx) => ({
-        id: idx + 1,
-        ...item,
-        customerId: null,
-        generatorId: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })) as RentalOrder[],
+      success: false,
+      error: (error as Error).message || "Failed to fetch rental orders",
+      data: [] as RentalOrder[],
     };
   }
 }
@@ -352,13 +307,35 @@ export async function markRentalOrderCompleted(id: number) {
 
 export async function deleteRentalOrder(id: number) {
   try {
-    await db.delete(rentalOrders).where(eq(rentalOrders.id, id));
+    const [deletedOrder] = await db
+      .delete(rentalOrders)
+      .where(eq(rentalOrders.id, id))
+      .returning();
+
+    // If order was active and linked to a generator, reset generator to Available
+    if (deletedOrder?.generatorId && deletedOrder.status?.toLowerCase() === "active") {
+      try {
+        const [gen] = await db
+          .select({ status: generators.status })
+          .from(generators)
+          .where(eq(generators.id, deletedOrder.generatorId));
+
+        if (gen && gen.status === "On Rent") {
+          await db
+            .update(generators)
+            .set({ status: "Available", updatedAt: new Date() })
+            .where(eq(generators.id, deletedOrder.generatorId));
+        }
+      } catch (genErr) {
+        console.error("Failed to release generator status on rental deletion:", genErr);
+      }
+    }
 
     revalidatePath("/rentals");
     revalidatePath("/generators");
     revalidatePath("/");
 
-    return { success: true };
+    return { success: true, data: deletedOrder };
   } catch (error) {
     console.error("Failed to delete rental order:", error);
     return {

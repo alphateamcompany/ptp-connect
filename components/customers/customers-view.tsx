@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Search, CheckCircle2 } from "lucide-react";
 import { Customer } from "@/lib/db/schema";
 import { CustomerTable } from "./customer-table";
@@ -20,6 +20,11 @@ interface CustomersViewProps {
 
 export function CustomersView({ initialCustomers }: CustomersViewProps) {
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+
+  useEffect(() => {
+    setCustomers(initialCustomers);
+  }, [initialCustomers]);
+
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modals state

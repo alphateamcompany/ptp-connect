@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Plus,
   CheckCircle2,
@@ -37,6 +37,10 @@ export function RentalsView({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<RentalOrder | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOrders(initialOrders);
+  }, [initialOrders]);
 
   // Search, Filter, and Sort states
   const [searchQuery, setSearchQuery] = useState("");
