@@ -63,7 +63,7 @@ export const customers = pgTable("customers", {
   contactPerson: varchar("contact_person", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   email: varchar("email", { length: 255 }),
-  paymentTerms: varchar("payment_terms", { length: 100 }).default("Net 30"),
+  paymentTerms: varchar("payment_terms", { length: 100 }).default("Cash"),
   outstandingAmount: numeric("outstanding_amount", { precision: 12, scale: 2 }).default("0"),
   billingAddress: text("billing_address"),
   siteAddress: text("site_address"),

@@ -28,8 +28,7 @@ export function EditCustomerModal({
     contactPerson: customer?.contactPerson || "",
     phone: customer?.phone || "",
     email: customer?.email || "",
-    paymentTerms: customer?.paymentTerms || "Net 30",
-    outstandingAmount: customer?.outstandingAmount ? String(customer.outstandingAmount) : "0",
+    paymentTerms: customer?.paymentTerms || "Cash",
     billingAddress: customer?.billingAddress || "",
     siteAddress: customer?.siteAddress || "",
   }));
@@ -51,7 +50,9 @@ export function EditCustomerModal({
   if (!isOpen || !customer) return null;
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -211,33 +212,41 @@ export function EditCustomerModal({
               />
             </div>
 
-            {/* Row 4: Payment Terms & Outstanding Amount (₹) */}
-            <div>
+            {/* Row 4: Payment Terms */}
+            <div className="sm:col-span-1">
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Payment Terms
               </label>
-              <input
-                type="text"
-                name="paymentTerms"
-                value={formData.paymentTerms || "Net 30"}
-                onChange={handleChange}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Outstanding Amount (₹)
-              </label>
-              <input
-                type="number"
-                name="outstandingAmount"
-                value={formData.outstandingAmount}
-                onChange={handleChange}
-                min="0"
-                step="any"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
-              />
+              <div className="relative">
+                <select
+                  name="paymentTerms"
+                  value={formData.paymentTerms || "Cash"}
+                  onChange={handleChange}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all cursor-pointer"
+                >
+                  {formData.paymentTerms &&
+                    !["Cash", "Gpay", "Cheque", "Online transfer"].includes(
+                      formData.paymentTerms
+                    ) && (
+                      <option value={formData.paymentTerms}>
+                        {formData.paymentTerms}
+                      </option>
+                    )}
+                  <option value="Cash">Cash</option>
+                  <option value="Gpay">Gpay</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="Online transfer">Online transfer</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-500">
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                      fillRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* Row 5: Billing Address (full width) */}

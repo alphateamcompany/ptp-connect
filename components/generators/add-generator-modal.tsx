@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Loader2, Calendar } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { CreateGeneratorInput } from "@/app/generators/actions";
 
 interface AddGeneratorModalProps {
@@ -9,6 +9,7 @@ interface AddGeneratorModalProps {
   onClose: () => void;
   onSubmit: (data: CreateGeneratorInput) => Promise<{ success: boolean; error?: string }>;
   suggestedId?: string;
+  zIndex?: string;
 }
 
 export function AddGeneratorModal({
@@ -16,6 +17,7 @@ export function AddGeneratorModal({
   onClose,
   onSubmit,
   suggestedId = "GEN-0808",
+  zIndex = "z-50",
 }: AddGeneratorModalProps) {
   const [formData, setFormData] = useState<CreateGeneratorInput>({
     generatorId: suggestedId,
@@ -38,18 +40,21 @@ export function AddGeneratorModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Update generatorId when modal opens with suggestedId
-  useEffect(() => {
-    if (isOpen) {
-      setFormData((prev) => ({
-        ...prev,
-        generatorId: suggestedId || "GEN-0808",
-        status: "Available",
-        currentHours: 0,
-      }));
-      setError(null);
-    }
-  }, [isOpen, suggestedId]);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const [prevSuggestedId, setPrevSuggestedId] = useState(suggestedId);
+  if (isOpen && (!prevIsOpen || prevSuggestedId !== suggestedId)) {
+    setPrevIsOpen(isOpen);
+    setPrevSuggestedId(suggestedId);
+    setFormData((prev) => ({
+      ...prev,
+      generatorId: suggestedId || "GEN-0808",
+      status: "Available",
+      currentHours: 0,
+    }));
+    setError(null);
+  } else if (!isOpen && prevIsOpen) {
+    setPrevIsOpen(false);
+  }
 
   // Handle ESC key
   useEffect(() => {
@@ -117,7 +122,7 @@ export function AddGeneratorModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200"
+      className={`fixed inset-0 ${zIndex || "z-50"} flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200`}
       onClick={(e) => {
         if (e.target === e.currentTarget && !loading) onClose();
       }}

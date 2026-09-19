@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Plus,
   CheckCircle2,
@@ -30,17 +30,31 @@ interface RentalsViewProps {
 
 export function RentalsView({
   initialOrders,
-  customers,
-  generators,
+  customers: initialCustomers,
+  generators: initialGenerators,
 }: RentalsViewProps) {
   const [orders, setOrders] = useState<RentalOrder[]>(initialOrders);
+  const [prevInitialOrders, setPrevInitialOrders] = useState(initialOrders);
+  if (prevInitialOrders !== initialOrders) {
+    setPrevInitialOrders(initialOrders);
+    setOrders(initialOrders);
+  }
+
+  const [extraCustomers, setExtraCustomers] = useState<Customer[]>([]);
+  const customers = useMemo(() => {
+    const existingIds = new Set(initialCustomers.map((c) => c.id));
+    return [...extraCustomers.filter((c) => !existingIds.has(c.id)), ...initialCustomers];
+  }, [extraCustomers, initialCustomers]);
+
+  const [extraGenerators, setExtraGenerators] = useState<Generator[]>([]);
+  const generators = useMemo(() => {
+    const existingIds = new Set(initialGenerators.map((g) => g.id));
+    return [...extraGenerators.filter((g) => !existingIds.has(g.id)), ...initialGenerators];
+  }, [extraGenerators, initialGenerators]);
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<RentalOrder | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
-
-  useEffect(() => {
-    setOrders(initialOrders);
-  }, [initialOrders]);
 
   // Search, Filter, and Sort states
   const [searchQuery, setSearchQuery] = useState("");
@@ -398,6 +412,8 @@ export function RentalsView({
           customers={customers}
           generators={generators}
           onSubmit={handleCreateOrder}
+          onCustomerAdded={(newCust) => setExtraCustomers((prev) => [newCust, ...prev])}
+          onGeneratorAdded={(newGen) => setExtraGenerators((prev) => [newGen, ...prev])}
         />
       )}
 

@@ -111,7 +111,7 @@ export async function createCustomer(data: CreateCustomerInput) {
         contactPerson: data.contactPerson?.trim() || null,
         phone: data.phone?.trim() || null,
         email: data.email?.trim() || null,
-        paymentTerms: data.paymentTerms?.trim() || "Net 30",
+        paymentTerms: data.paymentTerms?.trim() || "Cash",
         outstandingAmount:
           data.outstandingAmount !== undefined && data.outstandingAmount !== ""
             ? String(data.outstandingAmount)
@@ -139,7 +139,7 @@ export async function updateCustomer(
   data: Partial<CreateCustomerInput>
 ) {
   try {
-    const updateValues: Record<string, unknown> = {
+    const updateValues: Partial<Customer> = {
       updatedAt: new Date(),
     };
 
@@ -150,7 +150,7 @@ export async function updateCustomer(
       updateValues.companyName = data.companyName.trim();
     }
     if (data.gstNumber !== undefined) {
-      updateValues.gstNumber = data.gstNumber.trim() || null;
+      updateValues.gstNumber = data.gstNumber.trim().toUpperCase() || null;
     }
     if (data.contactPerson !== undefined) {
       updateValues.contactPerson = data.contactPerson.trim() || null;
@@ -162,7 +162,7 @@ export async function updateCustomer(
       updateValues.email = data.email.trim() || null;
     }
     if (data.paymentTerms !== undefined) {
-      updateValues.paymentTerms = data.paymentTerms.trim() || "Net 30";
+      updateValues.paymentTerms = data.paymentTerms.trim() || "Cash";
     }
     if (data.outstandingAmount !== undefined) {
       updateValues.outstandingAmount =

@@ -56,18 +56,12 @@ export function CustomerTable({
                 GST
               </th>
               <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase text-right">
-                OUTSTANDING
-              </th>
-              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase text-right">
                 ACTIONS
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {customers.map((customer) => {
-              const outstandingNum = Number(customer.outstandingAmount || 0);
-              const isZero = outstandingNum === 0;
-
               return (
                 <tr
                   key={customer.id}
@@ -108,17 +102,6 @@ export function CustomerTable({
                   <td className="py-4 px-6 hidden lg:table-cell">
                     <span className="text-sm font-medium text-slate-700 tracking-tight">
                       {customer.gstNumber || "—"}
-                    </span>
-                  </td>
-
-                  {/* OUTSTANDING Column */}
-                  <td className="py-4 px-6 text-right">
-                    <span
-                      className={`text-sm font-bold whitespace-nowrap ${
-                        isZero ? "text-emerald-600" : "text-[#e03131]"
-                      }`}
-                    >
-                      {formatIndianCurrency(customer.outstandingAmount)}
                     </span>
                   </td>
 
