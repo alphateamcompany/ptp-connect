@@ -252,7 +252,8 @@ export function GeneratorDetailsModal({
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
           >
             <Trash2 className="w-4 h-4" />
-            Delete Generator
+            <span className="sm:hidden">Delete</span>
+            <span className="hidden sm:inline">Delete Generator</span>
           </button>
 
           <div className="flex items-center gap-3">
@@ -269,7 +270,8 @@ export function GeneratorDetailsModal({
               className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <Edit className="w-4 h-4" />
-              Edit Generator
+              <span className="sm:hidden">Edit</span>
+              <span className="hidden sm:inline">Edit Generator</span>
             </button>
           </div>
         </div>

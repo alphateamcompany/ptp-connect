@@ -114,8 +114,8 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
         </div>
       )}
 
-      {/* Top Header Row matching Screenshot 1 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header */}
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
             Customers
@@ -124,19 +124,39 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
             Manage customer relationships &amp; billing
           </p>
         </div>
-
-        {/* Add Customer Button */}
+        {/* Full "Add Customer" button — desktop only */}
         <button
           onClick={handleOpenAddModal}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
+          className="hidden sm:inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Add Customer</span>
         </button>
       </div>
 
-      {/* Search Input matching Screenshot 1 */}
-      <div className="relative w-full">
+      {/* MOBILE: Search + compact "+ Add" on one line */}
+      <div className="flex items-center gap-2 sm:hidden">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search customers..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+          />
+        </div>
+        <button
+          onClick={handleOpenAddModal}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold transition-colors shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Add</span>
+        </button>
+      </div>
+
+      {/* DESKTOP: Full-width search bar */}
+      <div className="relative w-full hidden sm:block">
         <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         <input
           type="text"

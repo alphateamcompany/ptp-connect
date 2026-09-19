@@ -164,8 +164,8 @@ export function RentalsView({
         </div>
       )}
 
-      {/* Top Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header */}
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
             Rental Orders
@@ -174,21 +174,87 @@ export function RentalsView({
             Create and manage rental agreements
           </p>
         </div>
-
-        {/* New Rental Order Button */}
+        {/* Full "New Rental Order" button — desktop only */}
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
+          className="hidden sm:inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>New Rental Order</span>
         </button>
       </div>
 
-      {/* Search, Filter, and Sort Controls Bar */}
-      <div className="grid grid-cols-2 md:flex md:flex-row items-stretch md:items-center gap-3">
-        {/* Search Input — full width on mobile */}
-        <div className="relative col-span-2 md:flex-1">
+      {/* MOBILE Row 1: Search + compact "+ Add" button */}
+      <div className="flex items-center gap-2 sm:hidden">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search orders..."
+            className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full cursor-pointer"
+              title="Clear search"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold transition-colors shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Add</span>
+        </button>
+      </div>
+
+      {/* MOBILE Row 2: Status + Type + Sort filters */}
+      <div className="flex items-center gap-2 sm:hidden">
+        <div className="relative flex-1">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full appearance-none px-3 py-2.5 pr-8 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="relative flex-1">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-full appearance-none px-3 py-2.5 pr-8 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Types</option>
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Monthly">Monthly</option>
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        {hasActiveFilters && (
+          <button
+            onClick={handleResetFilters}
+            className="px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer shrink-0"
+          >
+            Reset
+          </button>
+        )}
+      </div>
+
+      {/* DESKTOP: Full search + filter bar — single row */}
+      <div className="hidden sm:flex items-center gap-3">
+        <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             type="text"
@@ -208,9 +274,7 @@ export function RentalsView({
             </button>
           )}
         </div>
-
-        {/* Status Filter */}
-        <div className="relative shrink-0 md:min-w-[140px]">
+        <div className="relative shrink-0 min-w-[140px]">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -222,9 +286,7 @@ export function RentalsView({
           </select>
           <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
-
-        {/* Rental Type Filter */}
-        <div className="relative shrink-0 md:min-w-[140px]">
+        <div className="relative shrink-0 min-w-[140px]">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -237,9 +299,7 @@ export function RentalsView({
           </select>
           <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
-
-        {/* Sort Option */}
-        <div className="relative col-span-2 sm:col-span-1 shrink-0 md:min-w-[190px]">
+        <div className="relative shrink-0 min-w-[190px]">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -255,12 +315,10 @@ export function RentalsView({
           <ArrowUpDown className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
-
-        {/* Reset Filters button if any filter active */}
         {hasActiveFilters && (
           <button
             onClick={handleResetFilters}
-            className="col-span-2 sm:col-span-1 md:col-span-auto px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer shrink-0"
+            className="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer shrink-0"
             title="Reset all filters and sorting"
           >
             Reset

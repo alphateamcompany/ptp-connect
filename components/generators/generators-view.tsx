@@ -147,8 +147,8 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
         </div>
       )}
 
-      {/* Top Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header */}
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
             Generators
@@ -157,20 +157,18 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
             Manage your complete generator fleet
           </p>
         </div>
-
-        {/* Add Generator Button */}
+        {/* Full "Add Generator" button — desktop only */}
         <button
           onClick={handleOpenAddModal}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
+          className="hidden sm:inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Add Generator</span>
         </button>
       </div>
 
-      {/* Filter, Search Bar, and View Toggle */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        {/* Search Input */}
+      {/* MOBILE Row 1: Search + compact "+ Add" button */}
+      <div className="flex items-center gap-2 sm:hidden">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
@@ -181,8 +179,69 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />
         </div>
+        <button
+          onClick={handleOpenAddModal}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold transition-colors shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Add</span>
+        </button>
+      </div>
 
-        {/* Status Dropdown */}
+      {/* MOBILE Row 2: Status filter + View toggle */}
+      <div className="flex items-center gap-3 sm:hidden">
+        <div className="relative flex-1">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full appearance-none px-4 py-2.5 pr-10 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All Status">All Status</option>
+            <option value="Available">Available</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Breakdown">Breakdown</option>
+            <option value="On Rent">On Rent</option>
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="flex items-center bg-white border border-slate-200/90 rounded-xl p-1 shrink-0 shadow-2xs">
+          <button
+            onClick={() => setViewMode("cards")}
+            title="Card Grid View"
+            className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${
+              viewMode === "cards"
+                ? "bg-slate-100 text-[#083a60]"
+                : "text-slate-400 hover:text-slate-700"
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("table")}
+            title="Table View"
+            className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${
+              viewMode === "table"
+                ? "bg-slate-100 text-[#083a60]"
+                : "text-slate-400 hover:text-slate-700"
+            }`}
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* DESKTOP: Search + Status + View toggle — single row */}
+      <div className="hidden sm:flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by ID, brand, model..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+          />
+        </div>
         <div className="relative shrink-0 min-w-[150px]">
           <select
             value={statusFilter}
@@ -197,8 +256,6 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
           </select>
           <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
-
-        {/* View Mode Toggle */}
         <div className="flex items-center bg-white border border-slate-200/90 rounded-xl p-1 shrink-0 shadow-2xs">
           <button
             onClick={() => setViewMode("cards")}
