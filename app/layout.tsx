@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PowerOps ERP - Power To Power",
+  title: "PTP - Connect",
   description: "Real-time overview of your generator fleet & rental business",
 };
 
