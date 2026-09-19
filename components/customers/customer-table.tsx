@@ -47,13 +47,13 @@ export function CustomerTable({
               <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
                 COMPANY
               </th>
-              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase hidden md:table-cell">
                 CONTACT
               </th>
-              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase hidden sm:table-cell">
                 PHONE
               </th>
-              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase hidden lg:table-cell">
                 GST
               </th>
               <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase text-right">
@@ -92,21 +92,21 @@ export function CustomerTable({
                   </td>
 
                   {/* CONTACT Column */}
-                  <td className="py-4 px-6">
+                  <td className="py-4 px-6 hidden md:table-cell">
                     <span className="text-sm font-medium text-slate-800">
                       {customer.contactPerson || customer.customerName || "—"}
                     </span>
                   </td>
 
                   {/* PHONE Column */}
-                  <td className="py-4 px-6">
+                  <td className="py-4 px-6 hidden sm:table-cell">
                     <span className="text-sm font-medium text-slate-800 whitespace-nowrap">
                       {customer.phone || "—"}
                     </span>
                   </td>
 
                   {/* GST Column */}
-                  <td className="py-4 px-6">
+                  <td className="py-4 px-6 hidden lg:table-cell">
                     <span className="text-sm font-medium text-slate-700 tracking-tight">
                       {customer.gstNumber || "—"}
                     </span>

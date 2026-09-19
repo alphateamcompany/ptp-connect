@@ -32,7 +32,7 @@ export default async function DashboardPage() {
     console.error("Error loading dashboard fleet stats:", err);
   }
   return (
-    <div className="p-8 lg:p-10">
+    <div className="p-4 sm:p-6 lg:p-10">
       <p className="text-sm font-medium text-slate-600">
         Real-time overview of your generator fleet & rental business
       </p>

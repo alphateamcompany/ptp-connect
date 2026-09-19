@@ -108,11 +108,11 @@ export function GeneratorTable({
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/60 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <th className="py-3.5 px-5">ID</th>
-              <th className="py-3.5 px-4">Generator & Model</th>
-              <th className="py-3.5 px-4">Capacity</th>
-              <th className="py-3.5 px-4">Location</th>
-              <th className="py-3.5 px-4">Running Hours</th>
-              <th className="py-3.5 px-4">Purchase Details</th>
+              <th className="py-3.5 px-4">Generator &amp; Model</th>
+              <th className="py-3.5 px-4 hidden sm:table-cell">Capacity</th>
+              <th className="py-3.5 px-4 hidden sm:table-cell">Location</th>
+              <th className="py-3.5 px-4 hidden md:table-cell">Running Hours</th>
+              <th className="py-3.5 px-4 hidden md:table-cell">Purchase Details</th>
               <th className="py-3.5 px-4">Status</th>
               <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
@@ -151,7 +151,7 @@ export function GeneratorTable({
                 </td>
 
                 {/* Capacity */}
-                <td className="py-4 px-4">
+                <td className="py-4 px-4 hidden sm:table-cell">
                   <span className="font-bold text-slate-800">
                     {gen.capacityKva}
                   </span>
@@ -161,7 +161,7 @@ export function GeneratorTable({
                 </td>
 
                 {/* Location */}
-                <td className="py-4 px-4">
+                <td className="py-4 px-4 hidden sm:table-cell">
                   {gen.location ? (
                     <div className="flex items-center gap-1.5 text-slate-700 text-xs font-medium">
                       <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -175,7 +175,7 @@ export function GeneratorTable({
                 </td>
 
                 {/* Running Hours */}
-                <td className="py-4 px-4">
+                <td className="py-4 px-4 hidden md:table-cell">
                   <div className="flex items-center gap-1.5 text-slate-700 text-xs font-medium">
                     <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span>
@@ -185,7 +185,7 @@ export function GeneratorTable({
                 </td>
 
                 {/* Purchase Cost & Date */}
-                <td className="py-4 px-4">
+                <td className="py-4 px-4 hidden md:table-cell">
                   <div className="text-xs font-medium text-slate-800">
                     {formatCurrency(gen.purchaseCost)}
                   </div>

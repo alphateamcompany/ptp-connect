@@ -30,7 +30,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex bg-[#f8fafc] text-slate-900 antialiased">
         <Sidebar />
-        <main className="flex-1 min-h-screen overflow-y-auto">{children}</main>
+        <main className="flex-1 min-h-screen overflow-y-auto pt-14 lg:pt-0">{children}</main>
       </body>
     </html>
   );

@@ -105,10 +105,10 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
   };
 
   return (
-    <div className="p-8 lg:p-10 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto space-y-6">
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-sm animate-in slide-in-from-top-4 duration-200">
+        <div className="fixed top-16 lg:top-6 left-4 right-4 lg:left-auto lg:right-6 z-50 flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-sm animate-in slide-in-from-top-4 duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span>{notification}</span>
         </div>

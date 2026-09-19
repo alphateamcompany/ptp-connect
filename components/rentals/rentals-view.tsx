@@ -155,10 +155,10 @@ export function RentalsView({
   }, [orders, searchQuery, statusFilter, typeFilter, sortBy]);
 
   return (
-    <div className="p-8 lg:p-10 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto space-y-6">
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-sm animate-in slide-in-from-top-4 duration-200">
+        <div className="fixed top-16 lg:top-6 left-4 right-4 lg:left-auto lg:right-6 z-50 flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-sm animate-in slide-in-from-top-4 duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span>{notification}</span>
         </div>
@@ -186,9 +186,9 @@ export function RentalsView({
       </div>
 
       {/* Search, Filter, and Sort Controls Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-        {/* Search Input */}
-        <div className="relative flex-1">
+      <div className="grid grid-cols-2 md:flex md:flex-row items-stretch md:items-center gap-3">
+        {/* Search Input — full width on mobile */}
+        <div className="relative col-span-2 md:flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             type="text"
@@ -210,7 +210,7 @@ export function RentalsView({
         </div>
 
         {/* Status Filter */}
-        <div className="relative shrink-0 min-w-[140px]">
+        <div className="relative shrink-0 md:min-w-[140px]">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -224,7 +224,7 @@ export function RentalsView({
         </div>
 
         {/* Rental Type Filter */}
-        <div className="relative shrink-0 min-w-[140px]">
+        <div className="relative shrink-0 md:min-w-[140px]">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -239,7 +239,7 @@ export function RentalsView({
         </div>
 
         {/* Sort Option */}
-        <div className="relative shrink-0 min-w-[190px]">
+        <div className="relative col-span-2 sm:col-span-1 shrink-0 md:min-w-[190px]">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -260,7 +260,7 @@ export function RentalsView({
         {hasActiveFilters && (
           <button
             onClick={handleResetFilters}
-            className="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer shrink-0"
+            className="col-span-2 sm:col-span-1 md:col-span-auto px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer shrink-0"
             title="Reset all filters and sorting"
           >
             Reset
