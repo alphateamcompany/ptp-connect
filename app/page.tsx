@@ -32,12 +32,17 @@ export default async function DashboardPage() {
     console.error("Error loading dashboard fleet stats:", err);
   }
   return (
-    <div className="p-4 sm:p-6 lg:p-10">
-      <p className="text-sm font-medium text-slate-600">
-        Real-time overview of your generator fleet & rental business
-      </p>
+    <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
+          Dashboard
+        </h1>
+        <p className="text-sm font-medium text-slate-500 mt-1">
+          Real-time overview of your generator fleet &amp; rental business
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6 max-w-[860px]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-[860px]">
         {/* Total Generators */}
         <Card className="relative overflow-hidden bg-white border border-slate-100 shadow-sm rounded-2xl py-5 pl-7 pr-5">
           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#0284c7]" />

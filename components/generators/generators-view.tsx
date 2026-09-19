@@ -147,10 +147,13 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
         </div>
       )}
 
-      {/* Top Header Row matching Screenshot */}
+      {/* Top Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-600">
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
+            Generators
+          </h1>
+          <p className="text-sm font-medium text-slate-500 mt-1">
             Manage your complete generator fleet
           </p>
         </div>

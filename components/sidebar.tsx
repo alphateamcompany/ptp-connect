@@ -74,7 +74,7 @@ export function Sidebar() {
         </div>
         <div className="flex flex-col">
           <span className="font-bold text-base tracking-tight text-white leading-tight">
-            PowerOps ERP
+            PTP Connect
           </span>
           <span className="text-xs text-blue-200/80 font-normal">
             Power To Power
@@ -142,7 +142,7 @@ export function Sidebar() {
           <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-400 text-slate-950 shrink-0">
             <Zap className="w-3.5 h-3.5 fill-slate-950 stroke-slate-950" />
           </div>
-          <span className="font-bold text-sm tracking-tight">PowerOps ERP</span>
+          <span className="font-bold text-sm tracking-tight">PTP Connect</span>
         </div>
       </header>
 

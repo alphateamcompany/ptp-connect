@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
 import { Customer } from "@/lib/db/schema";
-import { Printer, Pencil, Trash2 } from "lucide-react";
+import { User, Pencil, Trash2 } from "lucide-react";
 
 interface CustomerTableProps {
   customers: Customer[];
@@ -26,7 +25,7 @@ export function CustomerTable({
     return (
       <div className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center shadow-2xs">
         <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto text-slate-400 mb-3">
-          <Printer className="w-6 h-6" />
+          <User className="w-6 h-6" />
         </div>
         <h3 className="text-base font-semibold text-slate-800">
           No customers found
@@ -78,7 +77,7 @@ export function CustomerTable({
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3.5">
                       <div className="w-10 h-10 rounded-xl bg-[#e3ecf5] flex items-center justify-center text-[#255b88] shrink-0 border border-[#d2dfed]">
-                        <Printer className="w-5 h-5 stroke-[1.75]" />
+                        <User className="w-5 h-5 stroke-[1.75]" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-bold text-slate-900 truncate">
