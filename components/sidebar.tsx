@@ -7,6 +7,14 @@ import {
   Cpu,
   Users,
   FileText,
+  Truck,
+  MapPin,
+  RotateCcw,
+  Wrench,
+  Package,
+  IndianRupee,
+  BarChart3,
+  Sparkles,
   ChevronRight,
   Zap,
   Menu,
@@ -19,6 +27,8 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
+  badge?: string;
+  disabled?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -42,16 +52,66 @@ const navItems: NavItem[] = [
     href: "/rentals",
     icon: FileText,
   },
+  {
+    label: "Dispatch",
+    href: "/dispatch",
+    icon: Truck,
+  },
+  {
+    label: "Site Monitoring",
+    href: "/monitoring",
+    icon: MapPin,
+  },
+  {
+    label: "Returns",
+    href: "#",
+    icon: RotateCcw,
+    badge: "SOON",
+    disabled: true,
+  },
+  {
+    label: "Maintenance",
+    href: "/maintenance",
+    icon: Wrench,
+  },
+  {
+    label: "Inventory",
+    href: "#",
+    icon: Package,
+    badge: "SOON",
+    disabled: true,
+  },
+  {
+    label: "Finance",
+    href: "#",
+    icon: IndianRupee,
+    disabled: true,
+  },
+  {
+    label: "Reports",
+    href: "#",
+    icon: BarChart3,
+    badge: "SOON",
+    disabled: true,
+  },
+  {
+    label: "AI Insights",
+    href: "#",
+    icon: Sparkles,
+    badge: "SOON",
+    disabled: true,
+  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Close drawer on route change
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setIsOpen(false);
-  }, [pathname]);
+  }
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -68,7 +128,7 @@ export function Sidebar() {
   const navContent = (
     <>
       {/* Brand Header */}
-      <div className="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10 shrink-0">
         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-400 text-slate-950 shadow-sm shrink-0">
           <Zap className="w-5 h-5 fill-slate-950 stroke-slate-950" />
         </div>
@@ -91,20 +151,37 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive =
             item.href === "/"
               ? pathname === "/"
-              : pathname.startsWith(item.href);
+              : !item.disabled && pathname.startsWith(item.href);
+
+          if (item.disabled) {
+            return (
+              <div
+                key={item.label}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 select-none cursor-default"
+              >
+                <Icon className="w-5 h-5 shrink-0 text-white/60" />
+                <span>{item.label}</span>
+                {item.badge && (
+                  <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 tracking-wider">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+            );
+          }
 
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
                 isActive
                   ? "bg-white text-[#083a60] shadow-sm font-semibold"
                   : "text-white/80 hover:text-white hover:bg-white/10"
@@ -119,6 +196,11 @@ export function Sidebar() {
               <span>{item.label}</span>
               {isActive && (
                 <ChevronRight className="w-4 h-4 ml-auto text-[#083a60] shrink-0" />
+              )}
+              {item.badge && (
+                <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 tracking-wider">
+                  {item.badge}
+                </span>
               )}
             </Link>
           );

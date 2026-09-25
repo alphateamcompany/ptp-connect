@@ -29,6 +29,27 @@
       "when": 1789812145308,
       "tag": "0003_clumsy_sheva_callister",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790336845896,
+      "tag": "0004_acoustic_quentin_quire",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790336865912,
+      "tag": "0005_lean_komodo",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790337890000,
+      "tag": "0006_maintenance_records",
+      "breakpoints": true
     }
   ]
 }

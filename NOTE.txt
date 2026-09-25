@@ -1,2 +1,7 @@
 Client required for 
 
+On Generator page 
+- wanna add some more fields too.. 
+
+On Rental Orders page
+- Edit option for rental orders 
