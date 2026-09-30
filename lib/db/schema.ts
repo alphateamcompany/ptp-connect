@@ -159,3 +159,23 @@ export const maintenanceRecords = pgTable("maintenance_records", {
 export type MaintenanceRecord = typeof maintenanceRecords.$inferSelect;
 export type NewMaintenanceRecord = typeof maintenanceRecords.$inferInsert;
 
+export const returns = pgTable("returns", {
+  id: serial("id").primaryKey(),
+  returnNumber: varchar("return_number", { length: 50 }).notNull().unique(),
+  orderId: integer("order_id").references(() => rentalOrders.id, { onDelete: "set null" }),
+  orderNumber: varchar("order_number", { length: 50 }).notNull(),
+  generatorId: integer("generator_id").references(() => generators.id, { onDelete: "set null" }),
+  generatorCode: varchar("generator_code", { length: 100 }).notNull(),
+  generatorCapacity: varchar("generator_capacity", { length: 50 }),
+  customerName: varchar("customer_name", { length: 255 }).notNull(),
+  siteLocation: varchar("site_location", { length: 255 }).notNull(),
+  returnDate: varchar("return_date", { length: 50 }).notNull(),
+  closingHours: integer("closing_hours").default(0).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ReturnRecord = typeof returns.$inferSelect;
+export type NewReturnRecord = typeof returns.$inferInsert;
+

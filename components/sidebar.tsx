@@ -10,6 +10,7 @@ import {
   Truck,
   MapPin,
   Wrench,
+  RotateCcw,
   ChevronRight,
   Zap,
   Menu,
@@ -56,6 +57,11 @@ const navItems: NavItem[] = [
     label: "Site Monitoring",
     href: "/monitoring",
     icon: MapPin,
+  },
+  {
+    label: "Returns",
+    href: "/returns",
+    icon: RotateCcw,
   },
   {
     label: "Maintenance",
