@@ -11,6 +11,7 @@ import {
   MapPin,
   Wrench,
   RotateCcw,
+  Package,
   ChevronRight,
   Zap,
   Menu,
@@ -67,6 +68,11 @@ const navItems: NavItem[] = [
     label: "Maintenance",
     href: "/maintenance",
     icon: Wrench,
+  },
+  {
+    label: "Inventory",
+    href: "/inventory",
+    icon: Package,
   },
 ];
 

@@ -6,12 +6,8 @@ import {
   Search,
   ChevronDown,
   CheckCircle2,
-  Zap,
-  LayoutGrid,
-  List,
 } from "lucide-react";
 import { Generator } from "@/lib/db/schema";
-import { GeneratorCard } from "./generator-card";
 import { GeneratorTable } from "./generator-table";
 import { GeneratorDetailsModal } from "./generator-details-modal";
 import { EditGeneratorModal } from "./edit-generator-modal";
@@ -32,7 +28,6 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
   const [generators, setGenerators] = useState<Generator[]>(initialGenerators);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -78,9 +73,14 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
     setIsAddModalOpen(true);
   };
 
-  const handleCardClick = (gen: Generator) => {
+  const handleRowClick = (gen: Generator) => {
     setSelectedGenerator(gen);
     setIsDetailsModalOpen(true);
+  };
+
+  const handleOpenEdit = (gen: Generator) => {
+    setSelectedGenerator(gen);
+    setIsEditModalOpen(true);
   };
 
   const handleOpenEditFromDetails = (gen: Generator) => {
@@ -188,49 +188,23 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
         </button>
       </div>
 
-      {/* MOBILE Row 2: Status filter + View toggle */}
-      <div className="flex items-center gap-3 sm:hidden">
-        <div className="relative flex-1">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full appearance-none px-4 py-2.5 pr-10 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
-          >
-            <option value="All Status">All Status</option>
-            <option value="Available">Available</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Breakdown">Breakdown</option>
-            <option value="On Rent">On Rent</option>
-          </select>
-          <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-        </div>
-        <div className="flex items-center bg-white border border-slate-200/90 rounded-xl p-1 shrink-0 shadow-2xs">
-          <button
-            onClick={() => setViewMode("cards")}
-            title="Card Grid View"
-            className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${
-              viewMode === "cards"
-                ? "bg-slate-100 text-[#083a60]"
-                : "text-slate-400 hover:text-slate-700"
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setViewMode("table")}
-            title="Table View"
-            className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${
-              viewMode === "table"
-                ? "bg-slate-100 text-[#083a60]"
-                : "text-slate-400 hover:text-slate-700"
-            }`}
-          >
-            <List className="w-4 h-4" />
-          </button>
-        </div>
+      {/* MOBILE Row 2: Status filter */}
+      <div className="relative sm:hidden">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="w-full appearance-none px-4 py-2.5 pr-10 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+        >
+          <option value="All Status">All Status</option>
+          <option value="Available">Available</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Breakdown">Breakdown</option>
+          <option value="On Rent">On Rent</option>
+        </select>
+        <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
       </div>
 
-      {/* DESKTOP: Search + Status + View toggle — single row */}
+      {/* DESKTOP: Search + Status filter */}
       <div className="hidden sm:flex items-center gap-3">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -256,71 +230,16 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
           </select>
           <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
-        <div className="flex items-center bg-white border border-slate-200/90 rounded-xl p-1 shrink-0 shadow-2xs">
-          <button
-            onClick={() => setViewMode("cards")}
-            title="Card Grid View"
-            className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${
-              viewMode === "cards"
-                ? "bg-slate-100 text-[#083a60]"
-                : "text-slate-400 hover:text-slate-700"
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setViewMode("table")}
-            title="Table View"
-            className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${
-              viewMode === "table"
-                ? "bg-slate-100 text-[#083a60]"
-                : "text-slate-400 hover:text-slate-700"
-            }`}
-          >
-            <List className="w-4 h-4" />
-          </button>
-        </div>
       </div>
 
-      {/* Main View: Card Grid (Default) or Table View */}
-      {viewMode === "cards" ? (
-        filteredGenerators.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-xs">
-            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400 mb-4">
-              <Zap className="w-7 h-7" />
-            </div>
-            <h3 className="text-base font-semibold text-slate-800">
-              No generators found
-            </h3>
-            <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
-              No generators match your search criteria. Try adjusting your filters or add a new generator.
-            </p>
-            <button
-              onClick={handleOpenAddModal}
-              className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold rounded-xl transition-all shadow-xs cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Add Generator
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredGenerators.map((gen) => (
-              <GeneratorCard
-                key={gen.id}
-                generator={gen}
-                onClick={() => handleCardClick(gen)}
-              />
-            ))}
-          </div>
-        )
-      ) : (
-        <GeneratorTable
-          generators={filteredGenerators}
-          onDelete={handleDeleteGenerator}
-          onOpenAddModal={handleOpenAddModal}
-        />
-      )}
+      {/* Main View: Table View */}
+      <GeneratorTable
+        generators={filteredGenerators}
+        onEdit={handleOpenEdit}
+        onDelete={handleDeleteGenerator}
+        onOpenAddModal={handleOpenAddModal}
+        onRowClick={handleRowClick}
+      />
 
       {/* Details Modal with Edit Button */}
       <GeneratorDetailsModal

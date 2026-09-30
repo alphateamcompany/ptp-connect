@@ -179,3 +179,23 @@ export const returns = pgTable("returns", {
 export type ReturnRecord = typeof returns.$inferSelect;
 export type NewReturnRecord = typeof returns.$inferInsert;
 
+export const inventory = pgTable("inventory", {
+  id: serial("id").primaryKey(),
+  partNumber: varchar("part_number", { length: 100 }).notNull().unique(),
+  partName: varchar("part_name", { length: 255 }).notNull(),
+  model: varchar("model", { length: 255 }),
+  category: varchar("category", { length: 100 }).default("General").notNull(),
+  compatibleGenerator: varchar("compatible_generator", { length: 255 }).notNull(),
+  qtyAvailable: integer("qty_available").default(0).notNull(),
+  reorderLevel: integer("reorder_level").default(10).notNull(),
+  unitCost: numeric("unit_cost", { precision: 12, scale: 2 }).default("0").notNull(),
+  location: varchar("location", { length: 255 }).default("Chennai Main Warehouse").notNull(),
+  status: varchar("status", { length: 50 }).default("In Stock").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type InventoryItem = typeof inventory.$inferSelect;
+export type NewInventoryItem = typeof inventory.$inferInsert;
+

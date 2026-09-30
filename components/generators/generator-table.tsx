@@ -9,18 +9,23 @@ import {
   AlertCircle,
   Zap,
   Plus,
+  Pencil,
 } from "lucide-react";
 
 interface GeneratorTableProps {
   generators: Generator[];
+  onEdit: (generator: Generator) => void;
   onDelete: (id: number) => Promise<void>;
   onOpenAddModal: () => void;
+  onRowClick?: (generator: Generator) => void;
 }
 
 export function GeneratorTable({
   generators,
+  onEdit,
   onDelete,
   onOpenAddModal,
+  onRowClick,
 }: GeneratorTableProps) {
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -51,11 +56,12 @@ export function GeneratorTable({
             On Rent
           </span>
         );
+      case "maintenance":
       case "under maintenance":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            Under Maintenance
+            Maintenance
           </span>
         );
       default:
@@ -92,7 +98,7 @@ export function GeneratorTable({
         </p>
         <button
           onClick={onOpenAddModal}
-          className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold rounded-xl transition-all shadow-xs"
+          className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold rounded-xl transition-all shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Add Generator
@@ -108,7 +114,7 @@ export function GeneratorTable({
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/60 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <th className="py-3.5 px-5">ID</th>
-              <th className="py-3.5 px-4">Generator &amp; Model</th>
+              <th className="py-3.5 px-4">Generator</th>
               <th className="py-3.5 px-4 hidden sm:table-cell">Capacity</th>
               <th className="py-3.5 px-4 hidden sm:table-cell">Location</th>
               <th className="py-3.5 px-4 hidden md:table-cell">Running Hours</th>
@@ -121,7 +127,10 @@ export function GeneratorTable({
             {generators.map((gen) => (
               <tr
                 key={gen.id}
-                className="hover:bg-slate-50/70 transition-colors group"
+                onClick={() => onRowClick?.(gen)}
+                className={`hover:bg-slate-50/70 transition-colors group ${
+                  onRowClick ? "cursor-pointer" : ""
+                }`}
               >
                 {/* ID */}
                 <td className="py-4 px-5 whitespace-nowrap">
@@ -130,23 +139,13 @@ export function GeneratorTable({
                   </span>
                 </td>
 
-                {/* Generator Name & Model */}
+                {/* Generator Name */}
                 <td className="py-4 px-4">
-                  <div className="font-semibold text-slate-900 leading-tight">
+                  <div
+                    className="font-semibold text-slate-900 leading-tight"
+                    title={[gen.brand, gen.model].filter(Boolean).join(" • ") || undefined}
+                  >
                     {gen.name}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
-                    {gen.brand && <span>{gen.brand}</span>}
-                    {gen.brand && gen.model && <span>•</span>}
-                    <span>{gen.model}</span>
-                    {gen.serialNumber && (
-                      <>
-                        <span>•</span>
-                        <span className="text-[11px] font-mono text-slate-400">
-                          SN: {gen.serialNumber}
-                        </span>
-                      </>
-                    )}
                   </div>
                 </td>
 
@@ -201,14 +200,33 @@ export function GeneratorTable({
 
                 {/* Actions */}
                 <td className="py-4 px-4 text-right">
-                  <button
-                    onClick={() => handleDeleteClick(gen)}
-                    disabled={deletingId === gen.id}
-                    title="Delete generator"
-                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(gen);
+                      }}
+                      title="Edit generator"
+                      aria-label={`Edit ${gen.name}`}
+                      className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shrink-0"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(gen);
+                      }}
+                      disabled={deletingId === gen.id}
+                      title="Delete generator"
+                      aria-label={`Delete ${gen.name}`}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40 cursor-pointer shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
