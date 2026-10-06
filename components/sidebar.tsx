@@ -16,6 +16,7 @@ import {
   Zap,
   Menu,
   X,
+  IndianRupee,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -48,6 +49,11 @@ const navItems: NavItem[] = [
     label: "Rental Orders",
     href: "/rentals",
     icon: FileText,
+  },
+  {
+    label: "Finance",
+    href: "/finance",
+    icon: IndianRupee,
   },
   {
     label: "Dispatch",

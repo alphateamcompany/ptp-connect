@@ -35,7 +35,7 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedGenerator, setSelectedGenerator] = useState<Generator | null>(null);
 
-  const [suggestedId, setSuggestedId] = useState("GEN-1009");
+  const [suggestedId, setSuggestedId] = useState("GEN-0001");
   const [notification, setNotification] = useState<string | null>(null);
 
   // Filtered generators based on search query and status filter
@@ -68,7 +68,7 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
       const nextId = await getNextSuggestedGeneratorId();
       setSuggestedId(nextId);
     } catch {
-      setSuggestedId("GEN-1009");
+      setSuggestedId("GEN-0001");
     }
     setIsAddModalOpen(true);
   };

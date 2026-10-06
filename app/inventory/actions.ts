@@ -26,120 +26,6 @@ export interface InventoryStats {
   outOfStockCount: number;
 }
 
-const INITIAL_INVENTORY: InventoryItem[] = [
-  {
-    id: 1,
-    partNumber: "PPD-FLT-001",
-    partName: "Diesel Oil Filter",
-    model: "LF9009",
-    category: "Filters",
-    compatibleGenerator: "Cummins 250 kVA",
-    qtyAvailable: 42,
-    reorderLevel: 20,
-    unitCost: "850.00",
-    location: "Chennai Main Warehouse",
-    status: "In Stock",
-    notes: "High efficiency spin-on lube filter for Cummins QSL9 / 250 kVA engine",
-    createdAt: new Date("2025-01-10T10:00:00Z"),
-    updatedAt: new Date("2025-01-10T10:00:00Z"),
-  },
-  {
-    id: 2,
-    partNumber: "PPD-FLT-002",
-    partName: "Fuel Filter",
-    model: "FS1212",
-    category: "Filters",
-    compatibleGenerator: "Cummins 250/500 kVA",
-    qtyAvailable: 15,
-    reorderLevel: 20,
-    unitCost: "620.00",
-    location: "Chennai Main Warehouse",
-    status: "Low Stock",
-    notes: "Primary fuel filter water separator element",
-    createdAt: new Date("2025-01-12T10:00:00Z"),
-    updatedAt: new Date("2025-01-12T10:00:00Z"),
-  },
-  {
-    id: 3,
-    partNumber: "PPD-FLT-003",
-    partName: "Air Filter (Primary)",
-    model: "AF25708",
-    category: "Filters",
-    compatibleGenerator: "Cummins 250 kVA",
-    qtyAvailable: 28,
-    reorderLevel: 15,
-    unitCost: "1250.00",
-    location: "OMR Site Store",
-    status: "In Stock",
-    notes: "Heavy-duty radial seal primary air cleaner cartridge",
-    createdAt: new Date("2025-01-15T10:00:00Z"),
-    updatedAt: new Date("2025-01-15T10:00:00Z"),
-  },
-  {
-    id: 4,
-    partNumber: "PPD-BLT-001",
-    partName: "Fan V-Belt Set",
-    model: "8PK1420",
-    category: "Belts & Pulleys",
-    compatibleGenerator: "Mahindra 250 kVA",
-    qtyAvailable: 8,
-    reorderLevel: 10,
-    unitCost: "1450.00",
-    location: "Chennai Main Warehouse",
-    status: "Low Stock",
-    notes: "Matched raw edge cogged belt set",
-    createdAt: new Date("2025-01-18T10:00:00Z"),
-    updatedAt: new Date("2025-01-18T10:00:00Z"),
-  },
-  {
-    id: 5,
-    partNumber: "PPD-ELC-001",
-    partName: "Automatic Voltage Regulator (AVR)",
-    model: "SX460",
-    category: "Electrical",
-    compatibleGenerator: "Sudhir 500 kVA",
-    qtyAvailable: 5,
-    reorderLevel: 3,
-    unitCost: "4800.00",
-    location: "Chennai Main Warehouse",
-    status: "In Stock",
-    notes: "SX460 compatible AVR module for Stamford alternator",
-    createdAt: new Date("2025-01-20T10:00:00Z"),
-    updatedAt: new Date("2025-01-20T10:00:00Z"),
-  },
-  {
-    id: 6,
-    partNumber: "PPD-LUB-001",
-    partName: "15W-40 CI-4 Engine Oil (20L Can)",
-    model: "Premium CI-4",
-    category: "Coolant & Lubes",
-    compatibleGenerator: "All Cummins / Mahindra",
-    qtyAvailable: 0,
-    reorderLevel: 5,
-    unitCost: "5400.00",
-    location: "Chennai Main Warehouse",
-    status: "Out of Stock",
-    notes: "Premium heavy duty diesel engine oil bucket",
-    createdAt: new Date("2025-01-22T10:00:00Z"),
-    updatedAt: new Date("2025-01-22T10:00:00Z"),
-  },
-  {
-    id: 7,
-    partNumber: "PPD-BAT-001",
-    partName: "12V 180Ah Heavy Duty Starter Battery",
-    model: "XP-1800",
-    category: "Batteries",
-    compatibleGenerator: "Cummins 250/500 kVA",
-    qtyAvailable: 12,
-    reorderLevel: 6,
-    unitCost: "11200.00",
-    location: "OMR Site Store",
-    status: "In Stock",
-    notes: "Maintenance free heavy crank lead-acid battery",
-    createdAt: new Date("2025-01-25T10:00:00Z"),
-    updatedAt: new Date("2025-01-25T10:00:00Z"),
-  },
-];
 
 function computeStockStatus(qty: number, reorderLevel: number, manualStatus?: string): string {
   if (manualStatus && manualStatus !== "Auto") {
@@ -172,15 +58,10 @@ export async function getInventory(search?: string): Promise<InventoryItem[]> {
     }
 
     const rows = await db.select().from(inventory).orderBy(asc(inventory.id));
-
-    if (rows.length === 0) {
-      return INITIAL_INVENTORY;
-    }
-
     return rows;
   } catch (error) {
     console.error("Failed to fetch inventory from database:", error);
-    return INITIAL_INVENTORY;
+    return [];
   }
 }
 
@@ -224,14 +105,6 @@ export async function getGeneratorOptions(): Promise<string[]> {
       .orderBy(asc(generators.id));
 
     const options = new Set<string>();
-    // Preload common generator models
-    options.add("Cummins 250 kVA");
-    options.add("Cummins 250/500 kVA");
-    options.add("Cummins 125 kVA");
-    options.add("Mahindra 250 kVA");
-    options.add("Ashok Leyland 320 kVA");
-    options.add("Sudhir 500 kVA");
-    options.add("All 125-500 kVA");
 
     for (const row of rows) {
       if (row.name) options.add(row.name);
@@ -243,15 +116,7 @@ export async function getGeneratorOptions(): Promise<string[]> {
     return Array.from(options);
   } catch (error) {
     console.error("Failed to fetch generator options:", error);
-    return [
-      "Cummins 250 kVA",
-      "Cummins 250/500 kVA",
-      "Cummins 125 kVA",
-      "Mahindra 250 kVA",
-      "Ashok Leyland 320 kVA",
-      "Sudhir 500 kVA",
-      "All 125-500 kVA",
-    ];
+    return [];
   }
 }
 
@@ -342,28 +207,10 @@ export async function createInventoryItem(
     return { success: true, data: newItem };
   } catch (error) {
     console.error("Failed to create inventory item in DB:", error);
-    const qtyAvailable = Math.max(0, parseInt(String(data.qtyAvailable || 0), 10) || 0);
-    const reorderLevel = Math.max(0, parseInt(String(data.reorderLevel || 10), 10) || 0);
-    const unitCostNum = Math.max(0, parseFloat(String(data.unitCost || 0)) || 0);
-
-    const fallbackItem: InventoryItem = {
-      id: Date.now(),
-      partNumber: data.partNumber.trim().toUpperCase(),
-      partName: data.partName.trim(),
-      model: data.model?.trim() || null,
-      category: data.category.trim() || "General",
-      compatibleGenerator: data.compatibleGenerator.trim(),
-      qtyAvailable,
-      reorderLevel,
-      unitCost: unitCostNum.toFixed(2),
-      location: data.location?.trim() || "Chennai Main Warehouse",
-      status: computeStockStatus(qtyAvailable, reorderLevel, data.status),
-      notes: data.notes?.trim() || null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    return {
+      success: false,
+      error: (error as Error).message || "Failed to create inventory item",
     };
-
-    return { success: true, data: fallbackItem };
   }
 }
 

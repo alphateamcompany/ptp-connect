@@ -10,13 +10,19 @@ import {
   ChevronDown,
   ArrowUpDown,
   Filter,
+  Table as TableIcon,
+  LayoutGrid,
 } from "lucide-react";
 import { RentalOrder, Customer, Generator } from "@/lib/db/schema";
 import { RentalOrderCard } from "./rental-order-card";
+import { RentalOrdersTable } from "./rental-orders-table";
+import { RentalOrderDetailsModal } from "./rental-order-details-modal";
 import { NewRentalOrderModal } from "./new-rental-order-modal";
+import { EditRentalOrderModal } from "./edit-rental-order-modal";
 import { DeleteRentalOrderModal } from "./delete-rental-order-modal";
 import {
   createRentalOrder,
+  updateRentalOrder,
   markRentalOrderCompleted,
   deleteRentalOrder,
   CreateRentalOrderInput,
@@ -53,14 +59,17 @@ export function RentalsView({
   }, [extraGenerators, initialGenerators]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [orderToEdit, setOrderToEdit] = useState<RentalOrder | null>(null);
   const [orderToDelete, setOrderToDelete] = useState<RentalOrder | null>(null);
+  const [selectedOrderForDetails, setSelectedOrderForDetails] = useState<RentalOrder | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Search, Filter, and Sort states
+  // Search, Filter, Sort, and View states
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
   const [sortBy, setSortBy] = useState("order_asc");
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -80,6 +89,22 @@ export function RentalsView({
     return { success: false, error: res.error || "Failed to create rental order" };
   };
 
+  const handleUpdateOrder = async (id: number, data: CreateRentalOrderInput) => {
+    const res = await updateRentalOrder(id, data);
+    if (res.success && res.data) {
+      const updated = res.data as RentalOrder;
+      setOrders((prev) =>
+        prev.map((o) => (o.id === id ? updated : o))
+      );
+      if (selectedOrderForDetails?.id === id) {
+        setSelectedOrderForDetails(updated);
+      }
+      showNotification(`Rental order ${updated.orderNumber} updated successfully`);
+      return { success: true };
+    }
+    return { success: false, error: res.error || "Failed to update rental order" };
+  };
+
   const handleMarkCompleted = async (id: number) => {
     const res = await markRentalOrderCompleted(id);
     if (res.success && res.data) {
@@ -87,6 +112,11 @@ export function RentalsView({
       setOrders((prev) =>
         prev.map((o) => (o.id === id ? { ...o, status: "Completed" } : o))
       );
+      if (selectedOrderForDetails?.id === id) {
+        setSelectedOrderForDetails((prev) =>
+          prev ? { ...prev, status: "Completed" } : null
+        );
+      }
       showNotification(`Rental order ${updated.orderNumber} marked as completed`);
     } else {
       alert(res.error || "Failed to mark order completed");
@@ -97,6 +127,9 @@ export function RentalsView({
     const res = await deleteRentalOrder(id);
     if (res.success) {
       setOrders((prev) => prev.filter((o) => o.id !== id));
+      if (selectedOrderForDetails?.id === id) {
+        setSelectedOrderForDetails(null);
+      }
       showNotification("Rental order deleted successfully");
     } else {
       alert(res.error || "Failed to delete rental order");
@@ -270,7 +303,7 @@ export function RentalsView({
         )}
       </div>
 
-      {/* DESKTOP: Full search + filter bar — single row */}
+      {/* DESKTOP: Full search + filter bar + view toggle — single row */}
       <div className="hidden sm:flex items-center gap-3">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -292,7 +325,7 @@ export function RentalsView({
             </button>
           )}
         </div>
-        <div className="relative shrink-0 min-w-[140px]">
+        <div className="relative shrink-0 min-w-[130px]">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -304,7 +337,7 @@ export function RentalsView({
           </select>
           <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
-        <div className="relative shrink-0 min-w-[140px]">
+        <div className="relative shrink-0 min-w-[130px]">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -317,7 +350,7 @@ export function RentalsView({
           </select>
           <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
-        <div className="relative shrink-0 min-w-[190px]">
+        <div className="relative shrink-0 min-w-[180px]">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -333,6 +366,37 @@ export function RentalsView({
           <ArrowUpDown className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
+
+        {/* View Mode Toggle: Table (default) vs Cards */}
+        <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 shrink-0">
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              viewMode === "table"
+                ? "bg-white text-[#083a60] shadow-2xs font-bold"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+            title="Table View"
+          >
+            <TableIcon className="w-3.5 h-3.5" />
+            <span>Table</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("card")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              viewMode === "card"
+                ? "bg-white text-[#083a60] shadow-2xs font-bold"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+            title="Cards View"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Cards</span>
+          </button>
+        </div>
+
         {hasActiveFilters && (
           <button
             onClick={handleResetFilters}
@@ -344,16 +408,42 @@ export function RentalsView({
         )}
       </div>
 
-      {/* Results summary if searching or filtering */}
-      {hasActiveFilters && (
-        <div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
-          <span>
-            Showing {filteredAndSortedOrders.length} of {orders.length} orders
-          </span>
-        </div>
-      )}
+      {/* Sub-bar: Results summary and Mobile view switcher */}
+      <div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
+        <span>
+          Showing {filteredAndSortedOrders.length} of {orders.length} orders
+        </span>
 
-      {/* Main Content: Card Grid or Empty State */}
+        {/* Mobile View Toggle */}
+        <div className="flex sm:hidden items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200/80">
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            className={`p-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === "table"
+                ? "bg-white text-[#083a60] shadow-2xs font-bold"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+            title="Table View"
+          >
+            <TableIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("card")}
+            className={`p-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === "card"
+                ? "bg-white text-[#083a60] shadow-2xs font-bold"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+            title="Cards View"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content: Table View (default), Card Grid, or Empty State */}
       {orders.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-xs">
           <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400 mb-4">
@@ -391,6 +481,17 @@ export function RentalsView({
             Clear Filters
           </button>
         </div>
+      ) : viewMode === "table" ? (
+        <RentalOrdersTable
+          orders={filteredAndSortedOrders}
+          totalCount={orders.length}
+          onMarkCompleted={handleMarkCompleted}
+          onDeleteClick={(ord) => setOrderToDelete(ord)}
+          onViewDetails={(ord) => setSelectedOrderForDetails(ord)}
+          onEditClick={(ord) => setOrderToEdit(ord)}
+          sortBy={sortBy}
+          onSortChange={(newSort) => setSortBy(newSort)}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredAndSortedOrders.map((order) => (
@@ -399,9 +500,28 @@ export function RentalsView({
               order={order}
               onMarkCompleted={handleMarkCompleted}
               onDeleteClick={(ord) => setOrderToDelete(ord)}
+              onEditClick={(ord) => setOrderToEdit(ord)}
             />
           ))}
         </div>
+      )}
+
+      {/* Order Details Modal */}
+      {selectedOrderForDetails && (
+        <RentalOrderDetailsModal
+          order={selectedOrderForDetails}
+          isOpen={Boolean(selectedOrderForDetails)}
+          onClose={() => setSelectedOrderForDetails(null)}
+          onMarkCompleted={handleMarkCompleted}
+          onDeleteClick={(ord) => {
+            setSelectedOrderForDetails(null);
+            setOrderToDelete(ord);
+          }}
+          onEditClick={(ord) => {
+            setSelectedOrderForDetails(null);
+            setOrderToEdit(ord);
+          }}
+        />
       )}
 
       {/* New Rental Order Modal */}
@@ -412,6 +532,20 @@ export function RentalsView({
           customers={customers}
           generators={generators}
           onSubmit={handleCreateOrder}
+          onCustomerAdded={(newCust) => setExtraCustomers((prev) => [newCust, ...prev])}
+          onGeneratorAdded={(newGen) => setExtraGenerators((prev) => [newGen, ...prev])}
+        />
+      )}
+
+      {/* Edit Rental Order Modal */}
+      {orderToEdit && (
+        <EditRentalOrderModal
+          order={orderToEdit}
+          isOpen={Boolean(orderToEdit)}
+          onClose={() => setOrderToEdit(null)}
+          customers={customers}
+          generators={generators}
+          onSubmit={handleUpdateOrder}
           onCustomerAdded={(newCust) => setExtraCustomers((prev) => [newCust, ...prev])}
           onGeneratorAdded={(newGen) => setExtraGenerators((prev) => [newGen, ...prev])}
         />

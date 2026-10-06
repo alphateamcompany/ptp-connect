@@ -37,7 +37,16 @@ export function AddReturnModal({
   nextReturnNumber,
   onSubmit,
 }: AddReturnModalProps) {
-  const [returnNumber, setReturnNumber] = useState(nextReturnNumber || "RTN-2024-0013");
+  const [returnNumber, setReturnNumber] = useState(
+    nextReturnNumber || `RTN-${new Date().getFullYear()}-0001`
+  );
+  const [prevNextReturnNumber, setPrevNextReturnNumber] = useState(nextReturnNumber);
+  if (prevNextReturnNumber !== nextReturnNumber) {
+    setPrevNextReturnNumber(nextReturnNumber);
+    if (nextReturnNumber) {
+      setReturnNumber(nextReturnNumber);
+    }
+  }
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [orderNumber, setOrderNumber] = useState("");
   const [generatorCode, setGeneratorCode] = useState("");
@@ -51,12 +60,6 @@ export function AddReturnModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (nextReturnNumber) {
-      setReturnNumber(nextReturnNumber);
-    }
-  }, [nextReturnNumber]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -260,7 +263,7 @@ export function AddReturnModal({
                   type="text"
                   value={returnNumber}
                   onChange={(e) => setReturnNumber(e.target.value)}
-                  placeholder="e.g. RTN-2024-0012"
+                  placeholder="e.g. RTN-2026-0001"
                   required
                   className="w-full h-10 px-3 pl-9 rounded-xl border border-slate-200 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-[#083a60] focus:ring-2 focus:ring-[#083a60]/10 transition-all font-mono"
                 />
@@ -280,7 +283,7 @@ export function AddReturnModal({
                   setOrderNumber(e.target.value);
                   setSelectedOrderId(null);
                 }}
-                placeholder="e.g. RO-2024-0173"
+                placeholder="e.g. RO-0001"
                 required
                 className="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-[#083a60] focus:ring-2 focus:ring-[#083a60]/10 transition-all font-mono"
               />
@@ -298,7 +301,7 @@ export function AddReturnModal({
                   type="text"
                   value={generatorCode}
                   onChange={(e) => setGeneratorCode(e.target.value)}
-                  placeholder="e.g. PPD-250-012"
+                  placeholder="e.g. GEN-0001"
                   required
                   className="w-full h-10 px-3 pl-9 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-[#083a60] focus:ring-2 focus:ring-[#083a60]/10 transition-all"
                 />

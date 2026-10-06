@@ -41,7 +41,8 @@ function calculateRentalTotals(
   startDateStr: string,
   endDateStr: string,
   dailyRateInput: number | string,
-  transportChargesInput: number | string = 0
+  transportChargesInput: number | string = 0,
+  rentalType: string = "Monthly"
 ): RentalTotals {
   const start = new Date(startDateStr);
   const end = new Date(endDateStr);
@@ -49,10 +50,19 @@ function calculateRentalTotals(
   const diffTime = end.getTime() - start.getTime();
   const diffDays = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24)));
 
-  const dailyRate = Number(dailyRateInput) || 0;
+  const rate = Number(dailyRateInput) || 0;
   const transportCharges = Number(transportChargesInput) || 0;
 
-  const rentalCharge = diffDays * dailyRate;
+  let rentalCharge = 0;
+  const normalizedType = (rentalType || "Monthly").trim().toLowerCase();
+  if (normalizedType === "monthly") {
+    rentalCharge = Math.round((diffDays / 30) * rate);
+  } else if (normalizedType === "weekly") {
+    rentalCharge = Math.round((diffDays / 7) * rate);
+  } else {
+    rentalCharge = Math.round(diffDays * rate);
+  }
+
   const gstAmount = Math.round(rentalCharge * 0.18);
   const totalAmount = rentalCharge + gstAmount + transportCharges;
 
@@ -61,81 +71,10 @@ function calculateRentalTotals(
     rentalCharge,
     gstAmount,
     totalAmount,
-    dailyRate,
+    dailyRate: rate,
     transportCharges,
   };
 }
-
-const INITIAL_RENTAL_ORDERS = [
-  {
-    orderNumber: "RO-2001",
-    customerName: "BuildPro Constructions",
-    generatorName: "Cummins 125kVA #1",
-    startDate: "2026-07-06",
-    endDate: "2026-08-08",
-    rentalType: "Daily",
-    dailyRate: "4500",
-    transportCharges: "3500",
-    securityDeposit: "0",
-    dieselIncluded: true,
-    operatorIncluded: true,
-    rentalCharge: "148500",
-    gstAmount: "26730",
-    totalAmount: "178730",
-    status: "Completed",
-  },
-  {
-    orderNumber: "RO-2002",
-    customerName: "TechPark Realty",
-    generatorName: "Mahindra 250kVA #2",
-    startDate: "2026-07-13",
-    endDate: "2026-08-13",
-    rentalType: "Weekly",
-    dailyRate: "5000",
-    transportCharges: "3500",
-    securityDeposit: "0",
-    dieselIncluded: false,
-    operatorIncluded: false,
-    rentalCharge: "155000",
-    gstAmount: "27900",
-    totalAmount: "186400",
-    status: "Active",
-  },
-  {
-    orderNumber: "RO-2003",
-    customerName: "Sunrise Events",
-    generatorName: "Ashok Leyland 320kVA #3",
-    startDate: "2026-07-20",
-    endDate: "2026-08-18",
-    rentalType: "Monthly",
-    dailyRate: "5500",
-    transportCharges: "3500",
-    securityDeposit: "0",
-    dieselIncluded: true,
-    operatorIncluded: false,
-    rentalCharge: "159500",
-    gstAmount: "28710",
-    totalAmount: "191710",
-    status: "Completed",
-  },
-  {
-    orderNumber: "RO-2004",
-    customerName: "BuildPro Constructions",
-    generatorName: "Sudhir 500kVA #4",
-    startDate: "2026-07-27",
-    endDate: "2026-08-23",
-    rentalType: "Daily",
-    dailyRate: "6000",
-    transportCharges: "3500",
-    securityDeposit: "0",
-    dieselIncluded: false,
-    operatorIncluded: true,
-    rentalCharge: "162000",
-    gstAmount: "29160",
-    totalAmount: "194660",
-    status: "Active",
-  },
-];
 
 export async function getNextRentalOrderNumber(): Promise<string> {
   try {
@@ -143,7 +82,7 @@ export async function getNextRentalOrderNumber(): Promise<string> {
       .select({ orderNumber: rentalOrders.orderNumber })
       .from(rentalOrders);
 
-    let maxNum = 2004;
+    let maxNum = 0;
     for (const item of list) {
       const match = item.orderNumber.match(/RO-(\d+)/i);
       if (match) {
@@ -151,9 +90,9 @@ export async function getNextRentalOrderNumber(): Promise<string> {
         if (num > maxNum) maxNum = num;
       }
     }
-    return `RO-${maxNum + 1}`;
+    return `RO-${String(maxNum + 1).padStart(4, "0")}`;
   } catch {
-    return "RO-2005";
+    return "RO-0001";
   }
 }
 
@@ -207,7 +146,8 @@ export async function createRentalOrder(data: CreateRentalOrderInput) {
       data.startDate,
       data.endDate,
       data.dailyRate,
-      data.transportCharges
+      data.transportCharges,
+      data.rentalType || "Monthly"
     );
 
     const status = data.status || "Active";
@@ -222,7 +162,7 @@ export async function createRentalOrder(data: CreateRentalOrderInput) {
         generatorName: data.generatorName.trim(),
         startDate: data.startDate.trim(),
         endDate: data.endDate.trim(),
-        rentalType: data.rentalType?.trim() || "Daily",
+        rentalType: data.rentalType?.trim() || "Monthly",
         dailyRate: String(totals.dailyRate),
         transportCharges: String(totals.transportCharges),
         securityDeposit: data.securityDeposit !== undefined ? String(data.securityDeposit) : "0",
@@ -257,6 +197,119 @@ export async function createRentalOrder(data: CreateRentalOrderInput) {
     return {
       success: false,
       error: (error as Error).message || "Failed to create rental order",
+    };
+  }
+}
+
+export async function updateRentalOrder(
+  id: number,
+  data: Partial<CreateRentalOrderInput>
+) {
+  try {
+    const [currentOrder] = await db
+      .select()
+      .from(rentalOrders)
+      .where(eq(rentalOrders.id, id));
+
+    if (!currentOrder) {
+      return { success: false, error: "Rental order not found" };
+    }
+
+    const startDate = data.startDate?.trim() || currentOrder.startDate;
+    const endDate = data.endDate?.trim() || currentOrder.endDate;
+    const dailyRate = data.dailyRate !== undefined ? data.dailyRate : currentOrder.dailyRate;
+    const transportCharges =
+      data.transportCharges !== undefined
+        ? data.transportCharges
+        : currentOrder.transportCharges || "0";
+    const rentalType = data.rentalType?.trim() || currentOrder.rentalType || "Monthly";
+
+    const totals = calculateRentalTotals(
+      startDate,
+      endDate,
+      dailyRate,
+      transportCharges,
+      rentalType
+    );
+
+    const updateValues: Record<string, unknown> = {
+      updatedAt: new Date(),
+    };
+
+    if (data.customerId !== undefined) updateValues.customerId = data.customerId;
+    if (data.customerName !== undefined) updateValues.customerName = data.customerName.trim();
+    if (data.generatorId !== undefined) updateValues.generatorId = data.generatorId;
+    if (data.generatorName !== undefined) updateValues.generatorName = data.generatorName.trim();
+    if (data.startDate !== undefined) updateValues.startDate = data.startDate.trim();
+    if (data.endDate !== undefined) updateValues.endDate = data.endDate.trim();
+    if (data.rentalType !== undefined) updateValues.rentalType = data.rentalType.trim();
+    if (data.dailyRate !== undefined) updateValues.dailyRate = String(totals.dailyRate);
+    if (data.transportCharges !== undefined) updateValues.transportCharges = String(totals.transportCharges);
+    if (data.securityDeposit !== undefined) updateValues.securityDeposit = String(data.securityDeposit);
+    if (data.dieselIncluded !== undefined) updateValues.dieselIncluded = Boolean(data.dieselIncluded);
+    if (data.operatorIncluded !== undefined) updateValues.operatorIncluded = Boolean(data.operatorIncluded);
+    if (data.status !== undefined) updateValues.status = data.status.trim();
+
+    updateValues.rentalCharge = String(totals.rentalCharge);
+    updateValues.gstAmount = String(totals.gstAmount);
+    updateValues.totalAmount = String(totals.totalAmount);
+
+    const [updatedOrder] = await db
+      .update(rentalOrders)
+      .set(updateValues)
+      .where(eq(rentalOrders.id, id))
+      .returning();
+
+    // Handle generator status updates
+    const finalStatus = (data.status || currentOrder.status || "Active").toLowerCase();
+    const oldGenId = currentOrder.generatorId;
+    const newGenId = data.generatorId !== undefined ? data.generatorId : oldGenId;
+
+    if (oldGenId && oldGenId !== newGenId) {
+      if (currentOrder.status?.toLowerCase() === "active") {
+        try {
+          await db
+            .update(generators)
+            .set({ status: "Available", updatedAt: new Date() })
+            .where(eq(generators.id, oldGenId));
+        } catch (e) {
+          console.error("Failed to release old generator status:", e);
+        }
+      }
+    }
+
+    if (newGenId) {
+      if (finalStatus === "active") {
+        try {
+          await db
+            .update(generators)
+            .set({ status: "On Rent", updatedAt: new Date() })
+            .where(eq(generators.id, newGenId));
+        } catch (e) {
+          console.error("Failed to update new generator status to On Rent:", e);
+        }
+      } else if (finalStatus === "completed") {
+        try {
+          await db
+            .update(generators)
+            .set({ status: "Available", updatedAt: new Date() })
+            .where(eq(generators.id, newGenId));
+        } catch (e) {
+          console.error("Failed to mark generator Available on complete:", e);
+        }
+      }
+    }
+
+    revalidatePath("/rentals");
+    revalidatePath("/generators");
+    revalidatePath("/");
+
+    return { success: true, data: updatedOrder };
+  } catch (error) {
+    console.error("Failed to update rental order:", error);
+    return {
+      success: false,
+      error: (error as Error).message || "Failed to update rental order",
     };
   }
 }

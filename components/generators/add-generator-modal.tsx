@@ -16,7 +16,7 @@ export function AddGeneratorModal({
   isOpen,
   onClose,
   onSubmit,
-  suggestedId = "GEN-0808",
+  suggestedId = "GEN-0001",
   zIndex = "z-50",
 }: AddGeneratorModalProps) {
   const [formData, setFormData] = useState<CreateGeneratorInput>({
@@ -47,7 +47,7 @@ export function AddGeneratorModal({
     setPrevSuggestedId(suggestedId);
     setFormData((prev) => ({
       ...prev,
-      generatorId: suggestedId || "GEN-0808",
+      generatorId: suggestedId || "GEN-0001",
       status: "Available",
       currentHours: 0,
     }));

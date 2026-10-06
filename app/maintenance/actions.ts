@@ -30,31 +30,6 @@ export interface MaintenanceStats {
   underMaintenance: number;
 }
 
-const INITIAL_MAINTENANCE_RECORDS: MaintenanceRecord[] = [
-  {
-    id: 1,
-    generatorId: 2,
-    generatorName: "Mahindra 250kVA #2",
-    serviceType: "Oil Change",
-    serviceDate: "15 Jun 2025",
-    technician: "Ramesh",
-    cost: "2500",
-    hoursAtService: 2800,
-    nextServiceHours: 3050,
-    notes: "Regular oil and filter change completed. Generator tested under load.",
-    markAvailable: true,
-    createdAt: new Date("2025-06-15T10:00:00Z"),
-    updatedAt: new Date("2025-06-15T10:00:00Z"),
-  },
-];
-
-const FALLBACK_GENERATORS = [
-  { id: 1, generatorId: "GEN-0801", name: "Cummins 125kVA #1", brand: "Cummins", model: "QSB5-G5", capacityKva: "125", currentHours: 1250, status: "Available", location: "Warehouse A" },
-  { id: 2, generatorId: "GEN-0802", name: "Mahindra 250kVA #2", brand: "Mahindra", model: "mPower 250", capacityKva: "250", currentHours: 2850, status: "Available", location: "Warehouse B" },
-  { id: 3, generatorId: "GEN-0803", name: "Ashok Leyland 320kVA #3", brand: "Ashok Leyland", model: "AL320", capacityKva: "320", currentHours: 3200, status: "Under Maintenance", location: "Service Bay 1" },
-  { id: 4, generatorId: "GEN-0804", name: "Sudhir 500kVA #4", brand: "Sudhir", model: "PowerPro 500", capacityKva: "500", currentHours: 1800, status: "Under Maintenance", location: "Service Bay 2" },
-];
-
 export async function getMaintenanceRecords(search?: string) {
   try {
     let query = db.select().from(maintenanceRecords);
@@ -73,24 +48,22 @@ export async function getMaintenanceRecords(search?: string) {
     }
 
     const items = await query.orderBy(desc(maintenanceRecords.id));
-    if (items.length > 0) {
-      return { success: true, data: items };
-    }
-    return { success: true, data: INITIAL_MAINTENANCE_RECORDS };
+    return { success: true, data: items };
   } catch (error) {
-    console.error("Failed to fetch maintenance records, using initial fallback:", error);
+    console.error("Failed to fetch maintenance records:", error);
     return {
-      success: true,
-      data: INITIAL_MAINTENANCE_RECORDS,
+      success: false,
+      error: (error as Error).message || "Failed to fetch maintenance records",
+      data: [] as MaintenanceRecord[],
     };
   }
 }
 
 export async function getMaintenanceStats(): Promise<MaintenanceStats> {
-  let totalServices = 1;
-  let totalCost = 2500;
-  let dueForService = 1;
-  let underMaintenance = 2;
+  let totalServices = 0;
+  let totalCost = 0;
+  let dueForService = 0;
+  let underMaintenance = 0;
 
   try {
     const records = await db.select().from(maintenanceRecords);
@@ -114,7 +87,7 @@ export async function getMaintenanceStats(): Promise<MaintenanceStats> {
       dueForService = dueGens.length;
     }
   } catch (err) {
-    console.error("Failed to compute maintenance stats, using defaults:", err);
+    console.error("Failed to compute maintenance stats:", err);
   }
 
   return {
@@ -127,14 +100,10 @@ export async function getMaintenanceStats(): Promise<MaintenanceStats> {
 
 export async function getGeneratorsForMaintenance(): Promise<Generator[]> {
   try {
-    const list = await db.select().from(generators).orderBy(generators.name);
-    if (list.length > 0) {
-      return list;
-    }
-    return FALLBACK_GENERATORS as unknown as Generator[];
+    return await db.select().from(generators).orderBy(generators.name);
   } catch (err) {
-    console.error("Failed to fetch generators for maintenance, using fallback:", err);
-    return FALLBACK_GENERATORS as unknown as Generator[];
+    console.error("Failed to fetch generators for maintenance:", err);
+    return [];
   }
 }
 
@@ -201,22 +170,10 @@ export async function createMaintenanceRecord(data: CreateMaintenanceRecordInput
     return { success: true, data: newRecord };
   } catch (error) {
     console.error("Failed to create maintenance record in DB:", error);
-    const fallbackRecord: MaintenanceRecord = {
-      id: Date.now(),
-      generatorId: data.generatorId || null,
-      generatorName: data.generatorName.trim(),
-      serviceType: data.serviceType.trim(),
-      serviceDate: data.serviceDate.trim(),
-      technician: data.technician?.trim() || null,
-      cost: String(data.cost || "0"),
-      hoursAtService: Math.max(0, parseInt(String(data.hoursAtService || 0), 10) || 0),
-      nextServiceHours: Math.max(0, parseInt(String(data.nextServiceHours || 0), 10) || 0),
-      notes: data.notes?.trim() || null,
-      markAvailable: Boolean(data.markAvailable),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    return {
+      success: false,
+      error: (error as Error).message || "Failed to create maintenance record",
     };
-    return { success: true, data: fallbackRecord };
   }
 }
 

@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2, Pencil } from "lucide-react";
 import { RentalOrder } from "@/lib/db/schema";
 
 interface RentalOrderCardProps {
   order: RentalOrder;
   onMarkCompleted: (id: number) => Promise<void>;
   onDeleteClick: (order: RentalOrder) => void;
+  onEditClick: (order: RentalOrder) => void;
 }
 
 function formatDate(dateStr: string): string {
@@ -45,10 +46,18 @@ function formatINR(amount: number | string | null | undefined): string {
   }).format(num);
 }
 
+function getRateUnit(rentalType?: string | null): string {
+  const type = rentalType?.trim().toLowerCase();
+  if (type === "monthly") return "month";
+  if (type === "weekly") return "week";
+  return "day";
+}
+
 export function RentalOrderCard({
   order,
   onMarkCompleted,
   onDeleteClick,
+  onEditClick,
 }: RentalOrderCardProps) {
   const [isCompleting, setIsCompleting] = useState(false);
 
@@ -109,13 +118,13 @@ export function RentalOrderCard({
           <div className="flex items-center gap-1.5">
             <span className="text-slate-400 font-normal">Type:</span>
             <span className="font-bold text-slate-900">
-              {order.rentalType || "Daily"}
+              {order.rentalType || "Monthly"}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-slate-400 font-normal">Rate:</span>
             <span className="font-bold text-slate-900">
-              {formatINR(order.dailyRate)}/day
+              {formatINR(order.dailyRate)}/{getRateUnit(order.rentalType)}
             </span>
           </div>
         </div>
@@ -172,7 +181,7 @@ export function RentalOrderCard({
       {/* Card Actions / Footer */}
       <div className="mt-6 pt-2">
         {isActive ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleComplete}
@@ -190,6 +199,15 @@ export function RentalOrderCard({
             </button>
             <button
               type="button"
+              onClick={() => onEditClick(order)}
+              title="Edit Rental Order"
+              className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer shrink-0"
+              aria-label="Edit Order"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
               onClick={() => onDeleteClick(order)}
               title="Delete Rental Order"
               className="p-2.5 rounded-xl border border-rose-200/80 text-rose-500 hover:bg-rose-50 transition-colors shadow-2xs cursor-pointer shrink-0"
@@ -199,7 +217,16 @@ export function RentalOrderCard({
             </button>
           </div>
         ) : (
-          <div className="flex items-center">
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => onEditClick(order)}
+              title="Edit Rental Order"
+              className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+              aria-label="Edit Order"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
             <button
               type="button"
               onClick={() => onDeleteClick(order)}

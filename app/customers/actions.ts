@@ -18,54 +18,6 @@ export interface CreateCustomerInput {
   siteAddress?: string;
 }
 
-const INITIAL_CUSTOMERS: Customer[] = [
-  {
-    id: 1,
-    customerName: "BuildPro Constructions",
-    companyName: "BuildPro Constructions",
-    gstNumber: "27ABCDE1234F1Z5",
-    contactPerson: "Rajesh Sharma",
-    phone: "+91 9876543210",
-    email: "rajesh@buildpro.com",
-    paymentTerms: "Net 30",
-    outstandingAmount: "75000",
-    billingAddress: "402, Trade Tower, Bandra Kurla Complex, Mumbai, Maharashtra 400051",
-    siteAddress: "Metro Line 4 Project Site, Mulund West, Mumbai",
-    createdAt: new Date("2024-01-15T10:00:00Z"),
-    updatedAt: new Date("2024-01-15T10:00:00Z"),
-  },
-  {
-    id: 2,
-    customerName: "TechPark Realty",
-    companyName: "TechPark Realty",
-    gstNumber: "27FGHIJ5678K1L9",
-    contactPerson: "Priya Menon",
-    phone: "+91 9765432109",
-    email: "priya@techpark.com",
-    paymentTerms: "Net 15",
-    outstandingAmount: "0",
-    billingAddress: "12th Floor, Cyber Heights, HITEC City, Hyderabad, Telangana 500081",
-    siteAddress: "Phase 3 Commercial Tower, Gachibowli, Hyderabad",
-    createdAt: new Date("2024-02-10T11:30:00Z"),
-    updatedAt: new Date("2024-02-10T11:30:00Z"),
-  },
-  {
-    id: 3,
-    customerName: "Sunrise Events",
-    companyName: "Sunrise Events",
-    gstNumber: "27MNOPQ9012R3S4",
-    contactPerson: "Anil Kumar",
-    phone: "+91 9654321098",
-    email: "anil@sunriseevents.com",
-    paymentTerms: "Net 30",
-    outstandingAmount: "45000",
-    billingAddress: "Plot 88, Industrial Area Phase II, Chandigarh 160002",
-    siteAddress: "Grand Heritage Lawn, NH-1, Ambala Highway",
-    createdAt: new Date("2024-03-05T14:15:00Z"),
-    updatedAt: new Date("2024-03-05T14:15:00Z"),
-  },
-];
-
 export async function getCustomers(search?: string) {
   try {
     let query = db.select().from(customers);

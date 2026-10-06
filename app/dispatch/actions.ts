@@ -24,72 +24,6 @@ export interface CreateDispatchInput {
   notes?: string;
 }
 
-const INITIAL_DISPATCHES: Dispatch[] = [
-  {
-    id: 1,
-    orderId: 1,
-    orderNumber: "RO-2001",
-    customerName: "BuildPro Constructions",
-    generatorName: "Cummins 125kVA #1",
-    dispatchDate: "15 Jun 2025",
-    dispatchTime: "10:00 AM",
-    driverName: "Suresh",
-    vehicleNumber: "MH12AB1234",
-    hoursBeforeDispatch: 1200,
-    fuelFilled: 150,
-    notes: "Record dispatch details before generator leaves warehouse",
-    createdAt: new Date("2025-06-15T10:00:00Z"),
-    updatedAt: new Date("2025-06-15T10:00:00Z"),
-  },
-];
-
-const INITIAL_RENTAL_ORDERS: RentalOrder[] = [
-  {
-    id: 1,
-    orderNumber: "RO-2001",
-    customerId: 1,
-    customerName: "BuildPro Constructions",
-    generatorId: 1,
-    generatorName: "Cummins 125kVA #1",
-    startDate: "2025-06-15",
-    endDate: "2025-07-15",
-    rentalType: "Monthly",
-    dailyRate: "4500",
-    transportCharges: "3500",
-    securityDeposit: "0",
-    dieselIncluded: true,
-    operatorIncluded: true,
-    rentalCharge: "135000",
-    gstAmount: "24300",
-    totalAmount: "162800",
-    status: "Active",
-    createdAt: new Date("2025-06-15T09:00:00Z"),
-    updatedAt: new Date("2025-06-15T09:00:00Z"),
-  },
-  {
-    id: 2,
-    orderNumber: "RO-2002",
-    customerId: 2,
-    customerName: "TechPark Realty",
-    generatorId: 2,
-    generatorName: "Mahindra 250kVA #2",
-    startDate: "2026-07-13",
-    endDate: "2026-08-13",
-    rentalType: "Weekly",
-    dailyRate: "5000",
-    transportCharges: "3500",
-    securityDeposit: "0",
-    dieselIncluded: false,
-    operatorIncluded: false,
-    rentalCharge: "155000",
-    gstAmount: "27900",
-    totalAmount: "186400",
-    status: "Active",
-    createdAt: new Date("2026-07-13T09:00:00Z"),
-    updatedAt: new Date("2026-07-13T09:00:00Z"),
-  },
-];
-
 export async function getDispatches(search?: string) {
   try {
     let query = db.select().from(dispatches);
@@ -109,15 +43,13 @@ export async function getDispatches(search?: string) {
     }
 
     const items = await query.orderBy(desc(dispatches.id));
-    if (items.length > 0) {
-      return { success: true, data: items };
-    }
-    return { success: true, data: INITIAL_DISPATCHES };
+    return { success: true, data: items };
   } catch (error) {
-    console.error("Failed to fetch dispatches, using initial fallback:", error);
+    console.error("Failed to fetch dispatches:", error);
     return {
-      success: true,
-      data: INITIAL_DISPATCHES,
+      success: false,
+      error: (error as Error).message || "Failed to fetch dispatches",
+      data: [] as Dispatch[],
     };
   }
 }
@@ -129,15 +61,13 @@ export async function getRentalOrdersForDispatch() {
       .from(rentalOrders)
       .orderBy(desc(rentalOrders.id));
 
-    if (orders.length > 0) {
-      return { success: true, data: orders };
-    }
-    return { success: true, data: INITIAL_RENTAL_ORDERS };
+    return { success: true, data: orders };
   } catch (error) {
-    console.error("Failed to fetch rental orders for dispatch, using fallback:", error);
+    console.error("Failed to fetch rental orders for dispatch:", error);
     return {
-      success: true,
-      data: INITIAL_RENTAL_ORDERS,
+      success: false,
+      error: (error as Error).message || "Failed to fetch rental orders",
+      data: [] as RentalOrder[],
     };
   }
 }
@@ -190,27 +120,10 @@ export async function createDispatch(data: CreateDispatchInput) {
 
     return { success: true, data: newDispatch };
   } catch (error) {
-    console.error("Failed to create dispatch in DB, returning client record:", error);
-    // Fallback if db offline
-    const fallbackDispatch: Dispatch = {
-      id: Date.now(),
-      orderId: data.orderId || null,
-      orderNumber: data.orderNumber.trim(),
-      customerName: data.customerName.trim(),
-      generatorName: data.generatorName.trim(),
-      dispatchDate: data.dispatchDate.trim(),
-      dispatchTime: data.dispatchTime?.trim() || null,
-      driverName: data.driverName.trim(),
-      vehicleNumber: data.vehicleNumber.trim(),
-      hoursBeforeDispatch: Math.max(0, parseInt(String(data.hoursBeforeDispatch || 0), 10) || 0),
-      fuelFilled: Math.max(0, parseInt(String(data.fuelFilled || 0), 10) || 0),
-      notes: data.notes?.trim() || null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    console.error("Failed to create dispatch in DB:", error);
     return {
-      success: true,
-      data: fallbackDispatch,
+      success: false,
+      error: (error as Error).message || "Failed to create dispatch in database",
     };
   }
 }

@@ -23,6 +23,34 @@ interface NewRentalOrderModalProps {
   onGeneratorAdded?: (generator: Generator) => void;
 }
 
+const getRateForType = (
+  baseDailyRate: number | string | null | undefined,
+  rentalType: string
+): string => {
+  if (!baseDailyRate) return "";
+  const base = Number(baseDailyRate);
+  if (isNaN(base) || base <= 0) return "";
+  if (rentalType === "Monthly") return String(base * 30);
+  if (rentalType === "Weekly") return String(base * 7);
+  return String(base);
+};
+
+const convertRateBetweenTypes = (
+  currentRate: number | string,
+  fromType: string,
+  toType: string
+): string => {
+  const num = Number(currentRate);
+  if (isNaN(num) || num <= 0) return "";
+  let baseDaily = num;
+  if (fromType === "Monthly") baseDaily = num / 30;
+  else if (fromType === "Weekly") baseDaily = num / 7;
+
+  if (toType === "Monthly") return String(Math.round(baseDaily * 30));
+  if (toType === "Weekly") return String(Math.round(baseDaily * 7));
+  return String(Math.round(baseDaily));
+};
+
 export function NewRentalOrderModal({
   isOpen,
   onClose,
@@ -39,7 +67,7 @@ export function NewRentalOrderModal({
     generatorName: "",
     startDate: "",
     endDate: "",
-    rentalType: "Daily",
+    rentalType: "Monthly",
     dailyRate: "",
     transportCharges: "0",
     securityDeposit: "0",
@@ -75,7 +103,7 @@ export function NewRentalOrderModal({
   // Sub-modals states
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
   const [isAddGeneratorOpen, setIsAddGeneratorOpen] = useState(false);
-  const [suggestedGenId, setSuggestedGenId] = useState("GEN-0808");
+  const [suggestedGenId, setSuggestedGenId] = useState("GEN-0001");
 
   // DOM Refs
   const customerRef = useRef<HTMLDivElement>(null);
@@ -174,7 +202,7 @@ export function NewRentalOrderModal({
       ...prev,
       generatorId: g.id,
       generatorName: displayName,
-      dailyRate: g.dailyRate ? String(g.dailyRate) : prev.dailyRate,
+      dailyRate: g.dailyRate ? getRateForType(g.dailyRate, prev.rentalType) : prev.dailyRate,
     }));
     setGeneratorSearch(displayName);
     setIsGeneratorOpen(false);
@@ -210,7 +238,7 @@ export function NewRentalOrderModal({
       const nextId = await getNextSuggestedGeneratorId();
       setSuggestedGenId(nextId);
     } catch {
-      setSuggestedGenId("GEN-0811");
+      setSuggestedGenId("GEN-0001");
     }
     setIsAddGeneratorOpen(true);
   };
@@ -228,10 +256,35 @@ export function NewRentalOrderModal({
     return { success: false, error: res.error || "Failed to create generator" };
   };
 
+  const handleRentalTypeChange = (newType: string) => {
+    setFormData((prev) => {
+      let updatedRate = prev.dailyRate;
+      const selectedGen = prev.generatorId
+        ? generatorList.find((g) => g.id === prev.generatorId)
+        : null;
+
+      if (selectedGen && selectedGen.dailyRate) {
+        updatedRate = getRateForType(selectedGen.dailyRate, newType);
+      } else if (prev.dailyRate) {
+        updatedRate = convertRateBetweenTypes(prev.dailyRate, prev.rentalType, newType);
+      }
+
+      return {
+        ...prev,
+        rentalType: newType,
+        dailyRate: updatedRate,
+      };
+    });
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
+    if (name === "rentalType") {
+      handleRentalTypeChange(value);
+      return;
+    }
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
@@ -275,7 +328,7 @@ export function NewRentalOrderModal({
         currentGeneratorId = matchedGen.id;
         currentGeneratorName = `${matchedGen.name} (${matchedGen.model})`;
         if (!currentDailyRate && matchedGen.dailyRate) {
-          currentDailyRate = String(matchedGen.dailyRate);
+          currentDailyRate = getRateForType(matchedGen.dailyRate, formData.rentalType);
         }
       } else {
         currentGeneratorName = generatorSearch.trim();
@@ -302,8 +355,16 @@ export function NewRentalOrderModal({
       setError("End date cannot be earlier than start date.");
       return;
     }
+
+    const rateLabelText =
+      formData.rentalType === "Monthly"
+        ? "monthly rate"
+        : formData.rentalType === "Weekly"
+        ? "weekly rate"
+        : "daily rate";
+
     if (!currentDailyRate || Number(currentDailyRate) <= 0) {
-      setError("Please enter a valid daily rate.");
+      setError(`Please enter a valid ${rateLabelText}.`);
       return;
     }
 
@@ -644,7 +705,8 @@ export function NewRentalOrderModal({
                                       <>
                                         <span className="text-slate-300">•</span>
                                         <span className="text-slate-500">
-                                          ₹{g.dailyRate}/day
+                                          ₹{Number(getRateForType(g.dailyRate, formData.rentalType)).toLocaleString("en-IN")}/
+                                          {formData.rentalType === "Monthly" ? "mo" : formData.rentalType === "Weekly" ? "wk" : "day"}
                                         </span>
                                       </>
                                     )}
@@ -748,7 +810,7 @@ export function NewRentalOrderModal({
                 </div>
               </div>
 
-              {/* Rental Type & Daily Rate */}
+              {/* Rental Type & Rate */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-900 mb-1.5">
@@ -761,9 +823,9 @@ export function NewRentalOrderModal({
                       onChange={handleChange}
                       className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all cursor-pointer"
                     >
-                      <option value="Daily">Daily</option>
-                      <option value="Weekly">Weekly</option>
                       <option value="Monthly">Monthly</option>
+                      <option value="Weekly">Weekly</option>
+                      <option value="Daily">Daily</option>
                     </select>
                     <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   </div>
@@ -771,14 +833,25 @@ export function NewRentalOrderModal({
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-900 mb-1.5">
-                    Daily Rate (₹)
+                    {formData.rentalType === "Monthly"
+                      ? "Monthly Rate"
+                      : formData.rentalType === "Weekly"
+                      ? "Weekly Rate"
+                      : "Daily Rate"}{" "}
+                    (₹)
                   </label>
                   <input
                     type="number"
                     name="dailyRate"
                     value={formData.dailyRate}
                     onChange={handleChange}
-                    placeholder="4500"
+                    placeholder={
+                      formData.rentalType === "Monthly"
+                        ? "135000"
+                        : formData.rentalType === "Weekly"
+                        ? "31500"
+                        : "4500"
+                    }
                     min="0"
                     step="any"
                     required

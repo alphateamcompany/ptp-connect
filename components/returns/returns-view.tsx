@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Search,
-  Filter,
   Plus,
   CheckCircle2,
-  Trash2,
   X,
   ChevronDown,
+  ArrowUpDown,
   RotateCcw,
-  Check,
 } from "lucide-react";
 import { ReturnRecord } from "@/lib/db/schema";
 import {
@@ -21,6 +19,8 @@ import {
 } from "@/app/returns/actions";
 import { AddReturnModal } from "./add-return-modal";
 import { DeleteReturnModal } from "./delete-return-modal";
+import { ReturnTable } from "./return-table";
+import { ReturnDetailsModal } from "./return-details-modal";
 
 interface ReturnsViewProps {
   initialReturns: ReturnRecord[];
@@ -43,29 +43,14 @@ export function ReturnsView({
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<ReturnRecord | null>(null);
+  const [selectedRecordForDetails, setSelectedRecordForDetails] =
+    useState<ReturnRecord | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Search & Filter state
+  // Search, Filter, and Sort states
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [siteFilter, setSiteFilter] = useState<string>("All");
-  const [sortField, setSortField] = useState<"returnNumber" | "returnDate" | "closingHours">("returnNumber");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-
-  // Selected row for highlight (defaults to first row)
-  const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-
-  const filterRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
-        setFilterMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const [sortBy, setSortBy] = useState("return_desc");
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -80,7 +65,6 @@ export function ReturnsView({
     if (res.success && res.data) {
       const created = res.data as ReturnRecord;
       setReturnList((prev) => [created, ...prev]);
-      setSelectedRowId(created.id);
       showNotification(`Return record ${created.returnNumber} added successfully`);
       return { success: true };
     }
@@ -95,6 +79,9 @@ export function ReturnsView({
     const res = await deleteReturn(id);
     if (res.success) {
       setReturnList((prev) => prev.filter((r) => r.id !== id));
+      if (selectedRecordForDetails?.id === id) {
+        setSelectedRecordForDetails(null);
+      }
       showNotification("Return record deleted successfully");
     } else {
       alert(res.error || "Failed to delete return record");
@@ -109,18 +96,14 @@ export function ReturnsView({
     return ["All", ...sites];
   }, [returnList]);
 
-  // Active filters count
-  const activeFiltersCount = siteFilter !== "All" ? 1 : 0;
-
-  // Sorting toggle
-  const handleSort = (field: "returnNumber" | "returnDate" | "closingHours") => {
-    if (sortField === field) {
-      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
-      setSortField(field);
-      setSortOrder("desc");
-    }
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setSiteFilter("All");
+    setSortBy("return_desc");
   };
+
+  const hasActiveFilters =
+    searchQuery.trim() !== "" || siteFilter !== "All" || sortBy !== "return_desc";
 
   // Filtering and sorting
   const filteredAndSortedReturns = useMemo(() => {
@@ -148,24 +131,39 @@ export function ReturnsView({
 
     // Sorting
     result.sort((a, b) => {
-      let comp = 0;
-      if (sortField === "closingHours") {
-        comp = (a.closingHours || 0) - (b.closingHours || 0);
-      } else if (sortField === "returnDate") {
-        const da = new Date(a.returnDate).getTime() || 0;
-        const db = new Date(b.returnDate).getTime() || 0;
-        comp = da - db;
-      } else {
-        comp = (a.returnNumber || "").localeCompare(b.returnNumber || "");
+      if (sortBy === "return_asc") {
+        return (a.returnNumber || "").localeCompare(b.returnNumber || "", undefined, {
+          numeric: true,
+        });
       }
-      return sortOrder === "asc" ? comp : -comp;
+      if (sortBy === "return_desc") {
+        return (b.returnNumber || "").localeCompare(a.returnNumber || "", undefined, {
+          numeric: true,
+        });
+      }
+      if (sortBy === "customer_asc") {
+        return (a.customerName || "").localeCompare(b.customerName || "");
+      }
+      if (sortBy === "date_asc") {
+        return new Date(a.returnDate).getTime() - new Date(b.returnDate).getTime();
+      }
+      if (sortBy === "date_desc") {
+        return new Date(b.returnDate).getTime() - new Date(a.returnDate).getTime();
+      }
+      if (sortBy === "hours_desc") {
+        return (b.closingHours || 0) - (a.closingHours || 0);
+      }
+      if (sortBy === "hours_asc") {
+        return (a.closingHours || 0) - (b.closingHours || 0);
+      }
+      return 0;
     });
 
     return result;
-  }, [returnList, searchQuery, siteFilter, sortField, sortOrder]);
+  }, [returnList, searchQuery, siteFilter, sortBy]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 max-w-[1500px] mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto space-y-6">
       {/* Toast Notification */}
       {notification && (
         <div className="fixed top-16 lg:top-6 left-4 right-4 lg:left-auto lg:right-6 z-50 flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-sm animate-in slide-in-from-top-4 duration-200">
@@ -174,311 +172,225 @@ export function ReturnsView({
         </div>
       )}
 
-      {/* Top Header & Action Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Title & Subtitle */}
+      {/* Page Header */}
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
             Returns List
           </h1>
-          <p className="text-sm font-normal text-slate-500 mt-1">
-            Track and manage all generator returns.
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            Track and manage returned generator equipment
           </p>
         </div>
 
-        {/* Controls: Search, Filter, Export, Add Return Record */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Search bar */}
-          <div className="relative min-w-[280px] sm:min-w-[340px] md:min-w-[400px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by return no., rental order, customer or site..."
-              className="w-full h-10 pl-9 pr-8 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#083a60]/10 focus:border-[#083a60] transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+        {/* Full "Add Return Record" button — desktop */}
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="hidden sm:inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Add Return Record</span>
+        </button>
+      </div>
 
-          {/* Filter Popover Button */}
-          <div className="relative" ref={filterRef}>
+      {/* MOBILE Row 1: Search + compact "+ Add" button */}
+      <div className="flex items-center gap-2 sm:hidden">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search returns..."
+            className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+          />
+          {searchQuery && (
             <button
-              onClick={() => setFilterMenuOpen((prev) => !prev)}
-              className={`inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border text-sm font-medium transition-colors cursor-pointer ${
-                activeFiltersCount > 0
-                  ? "bg-blue-50 border-blue-200 text-[#083a60] font-semibold"
-                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-              }`}
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full cursor-pointer"
+              title="Clear search"
+              aria-label="Clear search"
             >
-              <Filter className="w-4 h-4 text-slate-600" />
-              <span>Filter</span>
-              {activeFiltersCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-[#083a60] text-white text-[11px] flex items-center justify-center font-bold">
-                  {activeFiltersCount}
-                </span>
-              )}
+              <X className="w-3.5 h-3.5" />
             </button>
+          )}
+        </div>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold transition-colors shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Add</span>
+        </button>
+      </div>
 
-            {/* Filter Menu Dropdown */}
-            {filterMenuOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-40 space-y-4 animate-in fade-in zoom-in-95 duration-100">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                    Filter by Site
-                  </span>
-                  {activeFiltersCount > 0 && (
-                    <button
-                      onClick={() => setSiteFilter("All")}
-                      className="text-xs text-blue-600 hover:underline font-semibold"
-                    >
-                      Reset all
-                    </button>
-                  )}
-                </div>
+      {/* MOBILE Row 2: Site Filter + Sort */}
+      <div className="flex items-center gap-2 sm:hidden">
+        <div className="relative flex-1">
+          <select
+            value={siteFilter}
+            onChange={(e) => setSiteFilter(e.target.value)}
+            className="w-full appearance-none px-3 py-2.5 pr-8 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Sites</option>
+            {uniqueSites
+              .filter((s) => s !== "All")
+              .map((site) => (
+                <option key={site} value={site}>
+                  {site}
+                </option>
+              ))}
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        {hasActiveFilters && (
+          <button
+            onClick={handleResetFilters}
+            className="px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer shrink-0"
+          >
+            Reset
+          </button>
+        )}
+      </div>
 
-                <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
-                  {uniqueSites.map((site) => (
-                    <button
-                      key={site}
-                      onClick={() => {
-                        setSiteFilter(site);
-                        setFilterMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-left ${
-                        siteFilter === site
-                          ? "bg-blue-50 text-[#083a60] font-bold"
-                          : "text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="truncate">{site}</span>
-                      {siteFilter === site && (
-                        <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+      {/* DESKTOP: Search + Site Filter + Sort bar — single row */}
+      <div className="hidden sm:flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by return no., rental order, generator, customer, site..."
+            className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full cursor-pointer"
+              title="Clear search"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="relative shrink-0 min-w-[160px]">
+          <select
+            value={siteFilter}
+            onChange={(e) => setSiteFilter(e.target.value)}
+            className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Sites</option>
+            {uniqueSites
+              .filter((s) => s !== "All")
+              .map((site) => (
+                <option key={site} value={site}>
+                  {site}
+                </option>
+              ))}
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+
+        <div className="relative shrink-0 min-w-[190px]">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full appearance-none pl-9 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="return_desc">Return No. (Descending)</option>
+            <option value="return_asc">Return No. (Ascending)</option>
+            <option value="date_desc">Return Date (Newest)</option>
+            <option value="date_asc">Return Date (Oldest)</option>
+            <option value="customer_asc">Customer (A-Z)</option>
+            <option value="hours_desc">Closing Hours (High to Low)</option>
+            <option value="hours_asc">Closing Hours (Low to High)</option>
+          </select>
+          <ArrowUpDown className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+
+        {hasActiveFilters && (
+          <button
+            onClick={handleResetFilters}
+            className="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer shrink-0"
+            title="Reset filters and sorting"
+          >
+            Reset
+          </button>
+        )}
+      </div>
+
+      {/* Sub-bar: Results summary */}
+      <div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
+        <span>
+          Showing {filteredAndSortedReturns.length} of {returnList.length} records
+        </span>
+      </div>
+
+      {/* Main Content: Table View or Empty State */}
+      {returnList.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-xs">
+          <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400 mb-4">
+            <RotateCcw className="w-7 h-7" />
           </div>
-
-          {/* Add Return Record Button */}
+          <h3 className="text-base font-semibold text-slate-800">
+            No return records yet
+          </h3>
+          <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+            Log return details when a generator is returned from customer site.
+          </p>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 h-10 px-4.5 rounded-xl bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer ml-auto sm:ml-0"
+            className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-[#083a60] hover:bg-[#0c4a7e] text-white text-sm font-semibold rounded-xl transition-all shadow-xs cursor-pointer"
           >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Add Return Record</span>
+            <Plus className="w-4 h-4" />
+            Add Return Record
           </button>
         </div>
-      </div>
-
-      {/* Main Table Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        {filteredAndSortedReturns.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
-              <RotateCcw className="w-6 h-6" />
-            </div>
-            <h3 className="text-base font-semibold text-slate-800">
-              No return records found
-            </h3>
-            <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
-              No returns match your search or filter criteria. Try adjusting filters or create a new return record.
-            </p>
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#083a60] text-white text-xs font-semibold hover:bg-[#0c4a7e] transition-colors cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Return Record</span>
-            </button>
+      ) : filteredAndSortedReturns.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-xs">
+          <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400 mb-4">
+            <RotateCcw className="w-7 h-7" />
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200/80 bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
-                  <th
-                    onClick={() => handleSort("returnNumber")}
-                    className="py-3.5 px-4 font-bold whitespace-nowrap cursor-pointer hover:text-slate-900 group"
-                  >
-                    <div className="inline-flex items-center gap-1">
-                      <span>Return No.</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
-                          sortField === "returnNumber" && sortOrder === "asc"
-                            ? "rotate-180 text-blue-600"
-                            : ""
-                        }`}
-                      />
-                    </div>
-                  </th>
-                  <th className="py-3.5 px-3 font-bold whitespace-nowrap">
-                    Rental Order
-                  </th>
-                  <th className="py-3.5 px-3 font-bold whitespace-nowrap">
-                    Generator
-                  </th>
-                  <th className="py-3.5 px-3 font-bold whitespace-nowrap">
-                    Customer
-                  </th>
-                  <th className="py-3.5 px-3 font-bold whitespace-nowrap">
-                    Site
-                  </th>
-                  <th
-                    onClick={() => handleSort("returnDate")}
-                    className="py-3.5 px-3 font-bold whitespace-nowrap cursor-pointer hover:text-slate-900 group"
-                  >
-                    <div className="inline-flex items-center gap-1">
-                      <span>Return Date</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
-                          sortField === "returnDate" && sortOrder === "asc"
-                            ? "rotate-180 text-blue-600"
-                            : ""
-                        }`}
-                      />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort("closingHours")}
-                    className="py-3.5 px-3 font-bold whitespace-nowrap cursor-pointer hover:text-slate-900 group"
-                  >
-                    <div className="inline-flex items-center gap-1">
-                      <span>Closing Hours</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
-                          sortField === "closingHours" && sortOrder === "asc"
-                            ? "rotate-180 text-blue-600"
-                            : ""
-                        }`}
-                      />
-                    </div>
-                  </th>
-                  <th className="py-3.5 px-4 font-bold whitespace-nowrap text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {filteredAndSortedReturns.map((item, index) => {
-                  const isHighlighted =
-                    selectedRowId ? selectedRowId === item.id : index === 0;
-
-                  return (
-                    <tr
-                      key={item.id}
-                      onClick={() => setSelectedRowId(item.id)}
-                      className={`transition-colors cursor-pointer ${
-                        isHighlighted
-                          ? "bg-cyan-50/20 hover:bg-cyan-50/40"
-                          : "hover:bg-slate-50/70"
-                      }`}
-                    >
-                      {/* Return No. with turquoise/cyan highlight bar on selected/first row */}
-                      <td className="py-3.5 px-4 whitespace-nowrap relative">
-                        {isHighlighted && (
-                          <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#00a3bf] rounded-r-xs" />
-                        )}
-                        <span className="font-bold text-slate-900 font-mono text-sm">
-                          {item.returnNumber}
-                        </span>
-                      </td>
-
-                      {/* Rental Order (blue link style) */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        <span className="font-semibold text-[#2563eb] hover:underline font-mono text-sm">
-                          {item.orderNumber}
-                        </span>
-                      </td>
-
-                      {/* Generator with capacity subtext */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        <div className="font-bold text-slate-900 text-sm">
-                          {item.generatorCode}
-                        </div>
-                        {item.generatorCapacity && (
-                          <div className="text-xs text-slate-500 font-normal mt-0.5">
-                            {item.generatorCapacity}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Customer */}
-                      <td className="py-3.5 px-3">
-                        <div
-                          className="font-semibold text-slate-900 text-sm max-w-[220px] truncate"
-                          title={item.customerName}
-                        >
-                          {item.customerName}
-                        </div>
-                      </td>
-
-                      {/* Site */}
-                      <td className="py-3.5 px-3">
-                        <div
-                          className="text-slate-600 text-sm max-w-[200px] truncate"
-                          title={item.siteLocation}
-                        >
-                          {item.siteLocation}
-                        </div>
-                      </td>
-
-                      {/* Return Date */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        <div className="text-slate-700 text-sm">
-                          {item.returnDate}
-                        </div>
-                      </td>
-
-                      {/* Closing Hours */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        <div className="text-slate-800 text-sm font-semibold">
-                          {(item.closingHours || 0).toLocaleString()}
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 whitespace-nowrap text-right">
-                        <div
-                          className="flex items-center justify-end gap-1"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <button
-                            onClick={() => setRecordToDelete(item)}
-                            title="Delete Return Record"
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Footer info bar */}
-        <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/40 text-xs font-medium text-slate-500 flex items-center justify-between">
-          <span>
-            Showing {filteredAndSortedReturns.length} of {returnList.length} return records
-          </span>
-          <span className="text-[11px] text-slate-400 hidden sm:inline">
-            PTP Connect • Generator Fleet Returns
-          </span>
+          <h3 className="text-base font-semibold text-slate-800">
+            No returns match your search
+          </h3>
+          <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+            Try adjusting your search keywords or site location filter.
+          </p>
+          <button
+            onClick={handleResetFilters}
+            className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-all cursor-pointer"
+          >
+            Clear Filters
+          </button>
         </div>
-      </div>
+      ) : (
+        <ReturnTable
+          returns={filteredAndSortedReturns}
+          totalCount={returnList.length}
+          onDeleteClick={(r) => setRecordToDelete(r)}
+          onViewDetails={(r) => setSelectedRecordForDetails(r)}
+          sortBy={sortBy}
+          onSortChange={(newSort) => setSortBy(newSort)}
+        />
+      )}
+
+      {/* Return Details Modal */}
+      {selectedRecordForDetails && (
+        <ReturnDetailsModal
+          returnRecord={selectedRecordForDetails}
+          isOpen={Boolean(selectedRecordForDetails)}
+          onClose={() => setSelectedRecordForDetails(null)}
+          onDeleteClick={(r) => {
+            setSelectedRecordForDetails(null);
+            setRecordToDelete(r);
+          }}
+        />
+      )}
 
       {/* Add Return Modal */}
       {isAddModalOpen && (

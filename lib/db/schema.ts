@@ -83,7 +83,7 @@ export const rentalOrders = pgTable("rental_orders", {
   generatorName: varchar("generator_name", { length: 255 }).notNull(),
   startDate: varchar("start_date", { length: 50 }).notNull(),
   endDate: varchar("end_date", { length: 50 }).notNull(),
-  rentalType: varchar("rental_type", { length: 50 }).notNull().default("Daily"),
+  rentalType: varchar("rental_type", { length: 50 }).notNull().default("Monthly"),
   dailyRate: numeric("daily_rate", { precision: 10, scale: 2 }).notNull(),
   transportCharges: numeric("transport_charges", { precision: 10, scale: 2 }).default("0"),
   securityDeposit: numeric("security_deposit", { precision: 10, scale: 2 }).default("0"),
@@ -198,4 +198,72 @@ export const inventory = pgTable("inventory", {
 
 export type InventoryItem = typeof inventory.$inferSelect;
 export type NewInventoryItem = typeof inventory.$inferInsert;
+
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  invoiceNumber: varchar("invoice_number", { length: 50 }).notNull().unique(),
+  orderId: integer("order_id").references(() => rentalOrders.id, { onDelete: "set null" }),
+  orderNumber: varchar("order_number", { length: 50 }),
+  customerId: integer("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  customerName: varchar("customer_name", { length: 255 }).notNull(),
+  customerGst: varchar("customer_gst", { length: 50 }),
+  issueDate: varchar("issue_date", { length: 50 }).notNull(),
+  dueDate: varchar("due_date", { length: 50 }).notNull(),
+  subtotal: numeric("subtotal", { precision: 12, scale: 2 }).notNull(),
+  gstAmount: numeric("gst_amount", { precision: 12, scale: 2 }).default("0").notNull(),
+  transportCharges: numeric("transport_charges", { precision: 10, scale: 2 }).default("0").notNull(),
+  additionalCharges: numeric("additional_charges", { precision: 10, scale: 2 }).default("0").notNull(),
+  totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull(),
+  paidAmount: numeric("paid_amount", { precision: 12, scale: 2 }).default("0").notNull(),
+  balanceAmount: numeric("balance_amount", { precision: 12, scale: 2 }).notNull(),
+  status: varchar("status", { length: 50 }).default("Pending").notNull(),
+  paymentTerms: varchar("payment_terms", { length: 100 }).default("Net 30"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type NewInvoice = typeof invoices.$inferInsert;
+
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  paymentNumber: varchar("payment_number", { length: 50 }).notNull().unique(),
+  invoiceId: integer("invoice_id").references(() => invoices.id, { onDelete: "set null" }),
+  invoiceNumber: varchar("invoice_number", { length: 50 }),
+  customerId: integer("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  customerName: varchar("customer_name", { length: 255 }).notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  paymentDate: varchar("payment_date", { length: 50 }).notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
+  referenceNumber: varchar("reference_number", { length: 100 }),
+  status: varchar("status", { length: 50 }).default("Completed").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type Payment = typeof payments.$inferSelect;
+export type NewPayment = typeof payments.$inferInsert;
+
+export const expenses = pgTable("expenses", {
+  id: serial("id").primaryKey(),
+  expenseNumber: varchar("expense_number", { length: 50 }).notNull().unique(),
+  category: varchar("category", { length: 100 }).notNull(),
+  description: varchar("description", { length: 255 }).notNull(),
+  generatorId: integer("generator_id").references(() => generators.id, { onDelete: "set null" }),
+  generatorName: varchar("generator_name", { length: 255 }),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  expenseDate: varchar("expense_date", { length: 50 }).notNull(),
+  vendor: varchar("vendor", { length: 255 }),
+  paymentMethod: varchar("payment_method", { length: 50 }).default("Bank Transfer").notNull(),
+  status: varchar("status", { length: 50 }).default("Paid").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type Expense = typeof expenses.$inferSelect;
+export type NewExpense = typeof expenses.$inferInsert;
+
 

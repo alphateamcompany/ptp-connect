@@ -176,7 +176,7 @@ export async function getNextSuggestedGeneratorId() {
       .select({ generatorId: generators.generatorId })
       .from(generators);
 
-    let maxNum = 807;
+    let maxNum = 0;
     for (const item of list) {
       const match = item.generatorId.match(/GEN-(\d+)/i);
       if (match) {
@@ -187,6 +187,6 @@ export async function getNextSuggestedGeneratorId() {
     const nextNum = String(maxNum + 1).padStart(4, "0");
     return `GEN-${nextNum}`;
   } catch {
-    return "GEN-0811";
+    return "GEN-0001";
   }
 }
