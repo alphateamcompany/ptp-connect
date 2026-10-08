@@ -160,6 +160,7 @@ export function EditGeneratorModal({
                 name="generatorId"
                 value={formData.generatorId || ""}
                 onChange={handleChange}
+                placeholder="e.g. GEN-001"
                 required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-[#f8fafc] text-slate-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
@@ -174,6 +175,7 @@ export function EditGeneratorModal({
                 name="name"
                 value={formData.name || ""}
                 onChange={handleChange}
+                placeholder="e.g. Cummins 250 kVA - Set 1"
                 required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
@@ -189,6 +191,7 @@ export function EditGeneratorModal({
                 name="brand"
                 value={formData.brand || ""}
                 onChange={handleChange}
+                placeholder="e.g. Cummins, Perkins, Kirloskar"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -202,6 +205,7 @@ export function EditGeneratorModal({
                 name="capacityKva"
                 value={formData.capacityKva || ""}
                 onChange={handleChange}
+                placeholder="e.g. 250"
                 required
                 min="0.1"
                 step="any"
@@ -219,6 +223,7 @@ export function EditGeneratorModal({
                 name="model"
                 value={formData.model || ""}
                 onChange={handleChange}
+                placeholder="e.g. C250D5"
                 required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
@@ -233,6 +238,7 @@ export function EditGeneratorModal({
                 name="engineNumber"
                 value={formData.engineNumber || ""}
                 onChange={handleChange}
+                placeholder="e.g. ENG-8742910"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -247,6 +253,7 @@ export function EditGeneratorModal({
                 name="alternatorNumber"
                 value={formData.alternatorNumber || ""}
                 onChange={handleChange}
+                placeholder="e.g. ALT-562134"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -260,6 +267,7 @@ export function EditGeneratorModal({
                 name="controllerType"
                 value={formData.controllerType || ""}
                 onChange={handleChange}
+                placeholder="e.g. Deep Sea 7320, PowerCommand 1.1"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -274,6 +282,7 @@ export function EditGeneratorModal({
                 name="serialNumber"
                 value={formData.serialNumber || ""}
                 onChange={handleChange}
+                placeholder="e.g. SN-2023-8941"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -287,6 +296,7 @@ export function EditGeneratorModal({
                 name="fuelTankLiters"
                 value={formData.fuelTankLiters || ""}
                 onChange={handleChange}
+                placeholder="e.g. 500"
                 min="0"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
@@ -302,6 +312,7 @@ export function EditGeneratorModal({
                 name="purchaseDate"
                 value={formData.purchaseDate || ""}
                 onChange={handleChange}
+                placeholder="YYYY-MM-DD"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all cursor-pointer"
               />
             </div>
@@ -315,6 +326,7 @@ export function EditGeneratorModal({
                 name="purchaseCost"
                 value={formData.purchaseCost || ""}
                 onChange={handleChange}
+                placeholder="e.g. 450000"
                 min="0"
                 step="0.01"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
@@ -331,6 +343,7 @@ export function EditGeneratorModal({
                 name="currentHours"
                 value={formData.currentHours !== undefined ? formData.currentHours : 0}
                 onChange={handleChange}
+                placeholder="e.g. 1250"
                 min="0"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
@@ -345,6 +358,7 @@ export function EditGeneratorModal({
                 name="location"
                 value={formData.location || ""}
                 onChange={handleChange}
+                placeholder="e.g. Main Yard / Warehouse"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>

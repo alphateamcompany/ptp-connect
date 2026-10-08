@@ -277,7 +277,7 @@ export function CreateInvoiceModal({
                 type="text"
                 value={customerGst}
                 onChange={(e) => setCustomerGst(e.target.value.toUpperCase())}
-                placeholder="27ABCDE1234F1Z5"
+                placeholder="e.g. 27ABCDE1234F1Z5"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#083a60]/20 focus:border-[#083a60]"
               />
             </div>
@@ -293,6 +293,7 @@ export function CreateInvoiceModal({
                   required
                   value={issueDate}
                   onChange={(e) => setIssueDate(e.target.value)}
+                  placeholder="YYYY-MM-DD"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#083a60]/20 focus:border-[#083a60]"
                 />
                 <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
@@ -310,6 +311,7 @@ export function CreateInvoiceModal({
                   required
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  placeholder="YYYY-MM-DD"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#083a60]/20 focus:border-[#083a60]"
                 />
                 <Calendar className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
@@ -330,6 +332,7 @@ export function CreateInvoiceModal({
                 required
                 value={subtotal}
                 onChange={(e) => handleSubtotalChange(e.target.value)}
+                placeholder="e.g. 50000.00"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#083a60]/20 focus:border-[#083a60]"
               />
             </div>
@@ -345,6 +348,7 @@ export function CreateInvoiceModal({
                 step="0.01"
                 value={gstAmount}
                 onChange={(e) => setGstAmount(e.target.value)}
+                placeholder="e.g. 9000.00"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#083a60]/20 focus:border-[#083a60]"
               />
             </div>
@@ -360,6 +364,7 @@ export function CreateInvoiceModal({
                 step="0.01"
                 value={transportCharges}
                 onChange={(e) => setTransportCharges(e.target.value)}
+                placeholder="e.g. 3500.00"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#083a60]/20 focus:border-[#083a60]"
               />
             </div>
@@ -375,6 +380,7 @@ export function CreateInvoiceModal({
                 step="0.01"
                 value={additionalCharges}
                 onChange={(e) => setAdditionalCharges(e.target.value)}
+                placeholder="e.g. 1000.00"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#083a60]/20 focus:border-[#083a60]"
               />
             </div>

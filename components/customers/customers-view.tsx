@@ -147,7 +147,7 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search customers..."
+            placeholder="Search by name, company, phone (e.g. Acme Infra)..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />
         </div>
@@ -167,7 +167,7 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search customers..."
+          placeholder="Search by name, company, phone (e.g. Acme Infra)..."
           className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
         />
       </div>

@@ -175,7 +175,7 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by ID, brand, model..."
+            placeholder="Search by ID, brand, model (e.g. GEN-001, Cummins)..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />
         </div>
@@ -212,7 +212,7 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by ID, brand, model..."
+            placeholder="Search by ID, brand, model (e.g. GEN-001, Cummins)..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />
         </div>

@@ -229,7 +229,7 @@ export function LogMaintenanceModal({
                   type="text"
                   value={serviceDate}
                   onChange={(e) => setServiceDate(e.target.value)}
-                  placeholder="DD/MM/YYYY"
+                  placeholder="e.g. 15/10/2026"
                   className="w-full pl-3.5 pr-10 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                 />
                 <button
@@ -262,7 +262,7 @@ export function LogMaintenanceModal({
                 type="text"
                 value={technician}
                 onChange={(e) => setTechnician(e.target.value)}
-                placeholder=""
+                placeholder="e.g. Suresh Maintenance Works"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
               />
             </div>
@@ -277,6 +277,7 @@ export function LogMaintenanceModal({
                 step="any"
                 value={cost}
                 onChange={(e) => setCost(e.target.value)}
+                placeholder="e.g. 4500"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
               />
             </div>
@@ -293,6 +294,7 @@ export function LogMaintenanceModal({
                 min="0"
                 value={hoursAtService}
                 onChange={(e) => setHoursAtService(e.target.value)}
+                placeholder="e.g. 1250"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
               />
             </div>
@@ -306,6 +308,7 @@ export function LogMaintenanceModal({
                 min="0"
                 value={nextServiceHours}
                 onChange={(e) => setNextServiceHours(e.target.value)}
+                placeholder="e.g. 1500"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
               />
             </div>
@@ -320,7 +323,7 @@ export function LogMaintenanceModal({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder=""
+              placeholder="e.g. Mobil Delvac engine oil and filter replaced, load tested ok"
               className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs resize-y"
             />
           </div>

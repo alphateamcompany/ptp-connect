@@ -195,7 +195,7 @@ export function NewSiteLogModal({
                   type="text"
                   value={logDate}
                   onChange={(e) => setLogDate(e.target.value)}
-                  placeholder="DD/MM/YYYY"
+                  placeholder="e.g. 15/10/2026"
                   className="w-full pl-3.5 pr-10 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                 />
                 <button
@@ -225,7 +225,7 @@ export function NewSiteLogModal({
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Site name"
+                placeholder="e.g. Metro Construction Site, Phase 2"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs placeholder:text-slate-400"
               />
             </div>
@@ -242,6 +242,7 @@ export function NewSiteLogModal({
                 min="0"
                 value={runningHours}
                 onChange={(e) => setRunningHours(e.target.value)}
+                placeholder="e.g. 8.5"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
               />
             </div>
@@ -255,6 +256,7 @@ export function NewSiteLogModal({
                 min="0"
                 value={dieselFilled}
                 onChange={(e) => setDieselFilled(e.target.value)}
+                placeholder="e.g. 60"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
               />
             </div>
@@ -270,6 +272,7 @@ export function NewSiteLogModal({
               min="0"
               value={dieselBalance}
               onChange={(e) => setDieselBalance(e.target.value)}
+              placeholder="e.g. 120"
               className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
             />
           </div>
@@ -283,6 +286,7 @@ export function NewSiteLogModal({
               rows={2}
               value={operatorRemarks}
               onChange={(e) => setOperatorRemarks(e.target.value)}
+              placeholder="e.g. Generator ran smoothly under normal load for 8 hours"
               className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs resize-y"
             />
           </div>
@@ -296,6 +300,7 @@ export function NewSiteLogModal({
               rows={2}
               value={breakdownReport}
               onChange={(e) => setBreakdownReport(e.target.value)}
+              placeholder="e.g. Minor oil leakage observed around filter seal (leave blank if none)"
               className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs resize-y"
             />
           </div>

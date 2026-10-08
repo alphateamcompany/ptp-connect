@@ -699,12 +699,12 @@ export function FinanceView({
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={
               activeTab === "invoices"
-                ? "Search by invoice #, customer, order #, GST..."
+                ? "Search invoices (e.g. INV-0001, Acme)..."
                 : activeTab === "payments"
-                ? "Search by receipt #, customer, ref #, mode..."
+                ? "Search payments (e.g. REC-0001, NEFT)..."
                 : activeTab === "expenses"
-                ? "Search by expense #, description, category, vendor, DG..."
-                : "Search by customer name, company, contact, phone, GST..."
+                ? "Search expenses (e.g. EXP-0001, Diesel)..."
+                : "Search customers (e.g. Acme Infra, Rahul)..."
             }
             className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />

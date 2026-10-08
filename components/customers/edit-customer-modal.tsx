@@ -141,6 +141,7 @@ export function EditCustomerModal({
                 name="customerName"
                 value={formData.customerName}
                 onChange={handleChange}
+                placeholder="e.g. Rahul Sharma"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -154,6 +155,7 @@ export function EditCustomerModal({
                 name="companyName"
                 value={formData.companyName}
                 onChange={handleChange}
+                placeholder="e.g. Acme Infra Projects Pvt Ltd"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -168,6 +170,7 @@ export function EditCustomerModal({
                 name="gstNumber"
                 value={formData.gstNumber || ""}
                 onChange={handleChange}
+                placeholder="e.g. 27ABCDE1234F1Z5"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all uppercase"
               />
             </div>
@@ -181,6 +184,7 @@ export function EditCustomerModal({
                 name="contactPerson"
                 value={formData.contactPerson || ""}
                 onChange={handleChange}
+                placeholder="e.g. Rajesh Kumar"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -195,6 +199,7 @@ export function EditCustomerModal({
                 name="phone"
                 value={formData.phone || ""}
                 onChange={handleChange}
+                placeholder="e.g. +91 98765 43210"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -208,6 +213,7 @@ export function EditCustomerModal({
                 name="email"
                 value={formData.email || ""}
                 onChange={handleChange}
+                placeholder="e.g. contact@acmeinfra.com"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -259,6 +265,7 @@ export function EditCustomerModal({
                 rows={2}
                 value={formData.billingAddress || ""}
                 onChange={handleChange}
+                placeholder="e.g. Plot No. 42, Industrial Area, Phase II, Mumbai 400001"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all resize-y"
               />
             </div>
@@ -273,6 +280,7 @@ export function EditCustomerModal({
                 rows={2}
                 value={formData.siteAddress || ""}
                 onChange={handleChange}
+                placeholder="e.g. Metro Line Construction Site, Pillar 104, Mumbai"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all resize-y"
               />
             </div>

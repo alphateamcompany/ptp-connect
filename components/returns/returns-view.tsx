@@ -201,7 +201,7 @@ export function ReturnsView({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search returns..."
+            placeholder="Search returns (e.g. RTN-2026-0001, Acme)..."
             className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />
           {searchQuery && (
@@ -261,7 +261,7 @@ export function ReturnsView({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by return no., rental order, generator, customer, site..."
+            placeholder="Search by return no., order, generator, customer, site (e.g. RTN-2026-0001)..."
             className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />
           {searchQuery && (

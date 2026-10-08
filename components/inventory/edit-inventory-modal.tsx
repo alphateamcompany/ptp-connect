@@ -215,6 +215,7 @@ export function EditInventoryModal({
                 required
                 value={formData.partNumber}
                 onChange={handleChange}
+                placeholder="e.g. PPD-FLT-001"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono text-sm uppercase focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -230,6 +231,7 @@ export function EditInventoryModal({
                 required
                 value={formData.partName}
                 onChange={handleChange}
+                placeholder="e.g. Diesel Oil Filter, Fuel Filter"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -260,6 +262,7 @@ export function EditInventoryModal({
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
+                placeholder="e.g. Filters, Electrical"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
               <datalist id="category-suggestions">
@@ -280,6 +283,7 @@ export function EditInventoryModal({
                 name="compatibleGenerator"
                 value={formData.compatibleGenerator}
                 onChange={handleChange}
+                placeholder="e.g. Cummins 250 kVA, Perkins 125 kVA"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
               <datalist id="generator-suggestions">
@@ -302,6 +306,7 @@ export function EditInventoryModal({
                 name="qtyAvailable"
                 value={formData.qtyAvailable}
                 onChange={handleChange}
+                placeholder="e.g. 25"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -319,6 +324,7 @@ export function EditInventoryModal({
                 name="reorderLevel"
                 value={formData.reorderLevel}
                 onChange={handleChange}
+                placeholder="e.g. 5"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -340,6 +346,7 @@ export function EditInventoryModal({
                   name="unitCost"
                   value={formData.unitCost}
                   onChange={handleChange}
+                  placeholder="e.g. 1250.00"
                   className="w-full pl-8 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
                 />
               </div>
@@ -356,6 +363,7 @@ export function EditInventoryModal({
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
+                placeholder="e.g. Main Yard / Warehouse"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
               <datalist id="location-suggestions">
@@ -398,6 +406,7 @@ export function EditInventoryModal({
                 rows={2}
                 value={formData.notes || ""}
                 onChange={handleChange}
+                placeholder="e.g. Shelf A-3, Rack 2, OEM specification details..."
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all resize-y"
               />
             </div>

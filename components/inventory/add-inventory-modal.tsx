@@ -325,7 +325,7 @@ export function AddInventoryModal({
               {formData.category === "Other" && (
                 <input
                   type="text"
-                  placeholder="Enter custom category"
+                  placeholder="e.g. Electrical Components"
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value)}
                   className="mt-2 w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60]"
@@ -387,6 +387,7 @@ export function AddInventoryModal({
                 name="qtyAvailable"
                 value={formData.qtyAvailable}
                 onChange={handleChange}
+                placeholder="e.g. 25"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -404,6 +405,7 @@ export function AddInventoryModal({
                 name="reorderLevel"
                 value={formData.reorderLevel}
                 onChange={handleChange}
+                placeholder="e.g. 5"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
               <span className="text-[11px] text-slate-400 mt-1 block">
@@ -428,7 +430,7 @@ export function AddInventoryModal({
                   name="unitCost"
                   value={formData.unitCost}
                   onChange={handleChange}
-                  placeholder="0.00"
+                  placeholder="e.g. 1250.00"
                   className="w-full pl-8 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
                 />
               </div>
@@ -466,7 +468,7 @@ export function AddInventoryModal({
               {formData.location === "Other" && (
                 <input
                   type="text"
-                  placeholder="Enter warehouse / storage location"
+                  placeholder="e.g. Warehouse Bay 3, Shelf B"
                   value={customLocation}
                   onChange={(e) => setCustomLocation(e.target.value)}
                   className="mt-2 w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60]"

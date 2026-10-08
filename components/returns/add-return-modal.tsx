@@ -373,6 +373,7 @@ export function AddReturnModal({
                   type="date"
                   value={returnDateIso}
                   onChange={handleDateChange}
+                  placeholder="YYYY-MM-DD"
                   required
                   className="w-full h-10 px-3 pl-9 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 focus:outline-hidden focus:border-[#083a60] focus:ring-2 focus:ring-[#083a60]/10 transition-all cursor-pointer"
                 />

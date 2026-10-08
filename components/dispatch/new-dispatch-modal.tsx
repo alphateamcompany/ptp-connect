@@ -212,7 +212,7 @@ export function NewDispatchModal({
                     type="text"
                     value={dispatchDate}
                     onChange={(e) => setDispatchDate(e.target.value)}
-                    placeholder="DD/MM/YYYY"
+                    placeholder="e.g. 15/10/2026"
                     className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                   />
                   <Calendar className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
@@ -228,7 +228,7 @@ export function NewDispatchModal({
                     type="text"
                     value={dispatchTime}
                     onChange={(e) => setDispatchTime(e.target.value)}
-                    placeholder="10:00 AM"
+                    placeholder="e.g. 10:00 AM"
                     className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                   />
                   <Clock className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
@@ -246,6 +246,7 @@ export function NewDispatchModal({
                   type="text"
                   value={driverName}
                   onChange={(e) => setDriverName(e.target.value)}
+                  placeholder="e.g. Ramesh Kumar"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                 />
               </div>
@@ -258,6 +259,7 @@ export function NewDispatchModal({
                   type="text"
                   value={vehicleNumber}
                   onChange={(e) => setVehicleNumber(e.target.value)}
+                  placeholder="e.g. MH 12 AB 1234"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                 />
               </div>
@@ -274,6 +276,7 @@ export function NewDispatchModal({
                   min="0"
                   value={hoursBeforeDispatch}
                   onChange={(e) => setHoursBeforeDispatch(e.target.value)}
+                  placeholder="e.g. 1250"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                 />
               </div>
@@ -287,6 +290,7 @@ export function NewDispatchModal({
                   min="0"
                   value={fuelFilled}
                   onChange={(e) => setFuelFilled(e.target.value)}
+                  placeholder="e.g. 150"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                 />
               </div>
@@ -301,6 +305,7 @@ export function NewDispatchModal({
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. Delivered with cables, test run successful on site"
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs resize-y"
               />
             </div>

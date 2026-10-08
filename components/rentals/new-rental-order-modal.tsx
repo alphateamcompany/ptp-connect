@@ -486,7 +486,7 @@ export function NewRentalOrderModal({
                         }
                       }}
                       onFocus={() => setIsCustomerOpen(true)}
-                      placeholder="Type to search customer..."
+                      placeholder="Type to search customer (e.g. Acme Infra)..."
                       className="w-full pl-9 pr-16 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                       autoComplete="off"
                     />
@@ -631,7 +631,7 @@ export function NewRentalOrderModal({
                         }
                       }}
                       onFocus={() => setIsGeneratorOpen(true)}
-                      placeholder="Type to search generator..."
+                      placeholder="Type to search generator (e.g. Cummins 250 kVA)..."
                       className="w-full pl-9 pr-16 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
                       autoComplete="off"
                     />
@@ -775,6 +775,7 @@ export function NewRentalOrderModal({
                       name="startDate"
                       value={formData.startDate}
                       onChange={handleChange}
+                      placeholder="YYYY-MM-DD"
                       required
                       className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     />
@@ -802,6 +803,7 @@ export function NewRentalOrderModal({
                       name="endDate"
                       value={formData.endDate}
                       onChange={handleChange}
+                      placeholder="YYYY-MM-DD"
                       required
                       className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     />
@@ -847,10 +849,10 @@ export function NewRentalOrderModal({
                     onChange={handleChange}
                     placeholder={
                       formData.rentalType === "Monthly"
-                        ? "135000"
+                        ? "e.g. 135000"
                         : formData.rentalType === "Weekly"
-                        ? "31500"
-                        : "4500"
+                        ? "e.g. 31500"
+                        : "e.g. 4500"
                     }
                     min="0"
                     step="any"
@@ -871,7 +873,7 @@ export function NewRentalOrderModal({
                     name="transportCharges"
                     value={formData.transportCharges}
                     onChange={handleChange}
-                    placeholder="0"
+                    placeholder="e.g. 5000"
                     min="0"
                     step="any"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
@@ -887,7 +889,7 @@ export function NewRentalOrderModal({
                     name="securityDeposit"
                     value={formData.securityDeposit}
                     onChange={handleChange}
-                    placeholder="0"
+                    placeholder="e.g. 25000"
                     min="0"
                     step="any"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
