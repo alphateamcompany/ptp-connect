@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Plus, Search, CheckCircle2 } from "lucide-react";
 import { Customer } from "@/lib/db/schema";
 import { CustomerTable } from "./customer-table";
 import { AddCustomerModal } from "./add-customer-modal";
 import { EditCustomerModal } from "./edit-customer-modal";
 import { DeleteCustomerModal } from "./delete-customer-modal";
+import { CustomerDetailsModal } from "./customer-details-modal";
 import {
   createCustomer,
   updateCustomer,
@@ -21,9 +22,11 @@ interface CustomersViewProps {
 export function CustomersView({ initialCustomers }: CustomersViewProps) {
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
 
-  useEffect(() => {
+  const [prevInitialCustomers, setPrevInitialCustomers] = useState(initialCustomers);
+  if (initialCustomers !== prevInitialCustomers) {
+    setPrevInitialCustomers(initialCustomers);
     setCustomers(initialCustomers);
-  }, [initialCustomers]);
+  }
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -31,6 +34,7 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const [notification, setNotification] = useState<string | null>(null);
@@ -60,6 +64,11 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
 
   const handleOpenAddModal = () => {
     setIsAddModalOpen(true);
+  };
+
+  const handleOpenViewModal = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsViewModalOpen(true);
   };
 
   const handleOpenEditModal = (customer: Customer) => {
@@ -175,9 +184,31 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
       {/* Customer Table */}
       <CustomerTable
         customers={filteredCustomers}
+        onView={handleOpenViewModal}
         onEdit={handleOpenEditModal}
         onDelete={handleOpenDeleteModal}
       />
+
+      {/* View Customer Details Modal */}
+      {isViewModalOpen && selectedCustomer && (
+        <CustomerDetailsModal
+          key={`view-${selectedCustomer.id}`}
+          customer={selectedCustomer}
+          isOpen={isViewModalOpen}
+          onClose={() => {
+            setIsViewModalOpen(false);
+            setSelectedCustomer(null);
+          }}
+          onEdit={(c) => {
+            setIsViewModalOpen(false);
+            handleOpenEditModal(c);
+          }}
+          onDelete={(c) => {
+            setIsViewModalOpen(false);
+            handleOpenDeleteModal(c);
+          }}
+        />
+      )}
 
       {/* Add Customer Modal */}
       {isAddModalOpen && (
@@ -218,4 +249,3 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
     </div>
   );
 }
-

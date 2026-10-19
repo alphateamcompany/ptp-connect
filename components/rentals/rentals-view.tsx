@@ -160,7 +160,10 @@ export function RentalsView({
         (o) =>
           o.orderNumber.toLowerCase().includes(q) ||
           o.customerName.toLowerCase().includes(q) ||
+          (o.billingCompany && o.billingCompany.toLowerCase().includes(q)) ||
           o.generatorName.toLowerCase().includes(q) ||
+          (o.generatorKva && o.generatorKva.toLowerCase().includes(q)) ||
+          (o.siteLocation && o.siteLocation.toLowerCase().includes(q)) ||
           (o.rentalType && o.rentalType.toLowerCase().includes(q))
       );
     }
@@ -311,7 +314,7 @@ export function RentalsView({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by order ID, customer, generator (e.g. RO-0001, Cummins)..."
+            placeholder="Search by order ID, customer, site, generator..."
             className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />
           {searchQuery && (

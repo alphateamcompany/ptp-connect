@@ -1,9 +1,25 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { X, Calendar, ChevronDown, Loader2, Search, Plus, Check } from "lucide-react";
+import {
+  X,
+  Calendar,
+  ChevronDown,
+  Loader2,
+  Search,
+  Plus,
+  Check,
+  Hash,
+  Building2,
+  MapPin,
+  Zap,
+  Percent,
+} from "lucide-react";
 import { Customer, Generator, RentalOrder } from "@/lib/db/schema";
-import { CreateRentalOrderInput } from "@/app/rentals/actions";
+import {
+  CreateRentalOrderInput,
+} from "@/app/rentals/actions";
+import { calculateRentalTotals } from "@/lib/rentals-calc";
 import { createCustomer, CreateCustomerInput } from "@/app/customers/actions";
 import {
   createGenerator,
@@ -63,10 +79,14 @@ export function EditRentalOrderModal({
   onGeneratorAdded,
 }: EditRentalOrderModalProps) {
   const [formData, setFormData] = useState<CreateRentalOrderInput>({
+    orderNumber: "",
     customerId: null,
     customerName: "",
+    billingCompany: "",
+    siteLocation: "",
     generatorId: null,
     generatorName: "",
+    generatorKva: "",
     startDate: "",
     endDate: "",
     rentalType: "Monthly",
@@ -75,6 +95,7 @@ export function EditRentalOrderModal({
     securityDeposit: "0",
     dieselIncluded: false,
     operatorIncluded: false,
+    gstRate: "18",
     status: "Active",
   });
 
@@ -117,10 +138,14 @@ export function EditRentalOrderModal({
   useEffect(() => {
     if (order && isOpen) {
       setFormData({
+        orderNumber: order.orderNumber || "",
         customerId: order.customerId ?? null,
         customerName: order.customerName || "",
+        billingCompany: order.billingCompany || "",
+        siteLocation: order.siteLocation || "",
         generatorId: order.generatorId ?? null,
         generatorName: order.generatorName || "",
+        generatorKva: order.generatorKva || "",
         startDate: order.startDate || "",
         endDate: order.endDate || "",
         rentalType: order.rentalType || "Monthly",
@@ -129,6 +154,7 @@ export function EditRentalOrderModal({
         securityDeposit: order.securityDeposit !== undefined && order.securityDeposit !== null ? String(order.securityDeposit) : "0",
         dieselIncluded: Boolean(order.dieselIncluded),
         operatorIncluded: Boolean(order.operatorIncluded),
+        gstRate: order.gstRate !== undefined && order.gstRate !== null ? String(order.gstRate) : "18",
         status: order.status || "Active",
       });
       setCustomerSearch(order.customerName || "");
@@ -207,6 +233,8 @@ export function EditRentalOrderModal({
       ...prev,
       customerId: c.id,
       customerName: displayName,
+      billingCompany: c.companyName || c.customerName || prev.billingCompany,
+      siteLocation: c.siteAddress || prev.siteLocation,
     }));
     setCustomerSearch(displayName);
     setIsCustomerOpen(false);
@@ -217,6 +245,8 @@ export function EditRentalOrderModal({
       ...prev,
       customerId: null,
       customerName: "",
+      billingCompany: "",
+      siteLocation: "",
     }));
     setCustomerSearch("");
     setIsCustomerOpen(true);
@@ -228,6 +258,7 @@ export function EditRentalOrderModal({
       ...prev,
       generatorId: g.id,
       generatorName: displayName,
+      generatorKva: g.capacityKva ? String(g.capacityKva) : prev.generatorKva,
       dailyRate: g.dailyRate ? getRateForType(g.dailyRate, prev.rentalType) : prev.dailyRate,
     }));
     setGeneratorSearch(displayName);
@@ -239,6 +270,7 @@ export function EditRentalOrderModal({
       ...prev,
       generatorId: null,
       generatorName: "",
+      generatorKva: "",
     }));
     setGeneratorSearch("");
     setIsGeneratorOpen(true);
@@ -361,6 +393,10 @@ export function EditRentalOrderModal({
       }
     }
 
+    if (!formData.orderNumber?.trim()) {
+      setError("Please enter a valid Order ID/Number.");
+      return;
+    }
     if (!currentCustomerName) {
       setError("Please select or search for a customer.");
       return;
@@ -396,11 +432,16 @@ export function EditRentalOrderModal({
 
     const payload: CreateRentalOrderInput = {
       ...formData,
+      orderNumber: formData.orderNumber.trim(),
       customerId: currentCustomerId,
       customerName: currentCustomerName,
+      billingCompany: formData.billingCompany?.trim() || undefined,
+      siteLocation: formData.siteLocation?.trim() || undefined,
       generatorId: currentGeneratorId,
       generatorName: currentGeneratorName,
+      generatorKva: formData.generatorKva?.trim() || undefined,
       dailyRate: currentDailyRate,
+      gstRate: formData.gstRate !== undefined && formData.gstRate !== "" ? formData.gstRate : 18,
     };
 
     setLoading(true);
@@ -417,6 +458,24 @@ export function EditRentalOrderModal({
       setLoading(false);
     }
   };
+
+  const liveTotals = useMemo(() => {
+    return calculateRentalTotals(
+      formData.startDate,
+      formData.endDate,
+      formData.dailyRate,
+      formData.transportCharges,
+      formData.rentalType,
+      formData.gstRate
+    );
+  }, [
+    formData.startDate,
+    formData.endDate,
+    formData.dailyRate,
+    formData.transportCharges,
+    formData.rentalType,
+    formData.gstRate,
+  ]);
 
   return (
     <>
@@ -471,22 +530,47 @@ export function EditRentalOrderModal({
                 </div>
               )}
 
-              {/* Status Selector */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-1.5">
-                  Order Status
-                </label>
-                <div className="relative">
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all cursor-pointer font-medium"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              {/* Order ID & Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-sm font-semibold text-slate-900">
+                      Order ID / Number
+                    </label>
+                    <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+                      Unique
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <Hash className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      name="orderNumber"
+                      value={formData.orderNumber || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. RO-0001"
+                      required
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Order Status
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                      className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all cursor-pointer font-medium"
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                    <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
               </div>
 
@@ -632,6 +716,43 @@ export function EditRentalOrderModal({
                     <Plus className="w-4 h-4 text-[#083a60] stroke-[2.5]" />
                     <span>Add</span>
                   </button>
+                </div>
+              </div>
+
+              {/* Billing Company & Site */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Billing Company
+                  </label>
+                  <div className="relative">
+                    <Building2 className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      name="billingCompany"
+                      value={formData.billingCompany || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. Acme Infra Pvt Ltd"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Site / Location
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      name="siteLocation"
+                      value={formData.siteLocation || ""}
+                      onChange={handleChange}
+                      placeholder="e.g. Nelson Manickam Road"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -803,6 +924,27 @@ export function EditRentalOrderModal({
                 </div>
               </div>
 
+              {/* Generator Capacity kVA */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                  Generator Capacity (kVA)
+                </label>
+                <div className="relative">
+                  <Zap className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none" />
+                  <input
+                    type="text"
+                    name="generatorKva"
+                    value={formData.generatorKva || ""}
+                    onChange={handleChange}
+                    placeholder="e.g. 62.5 or 250"
+                    className="w-full pl-9 pr-14 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                    kVA
+                  </span>
+                </div>
+              </div>
+
               {/* Start Date & End Date */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -873,7 +1015,7 @@ export function EditRentalOrderModal({
                       name="rentalType"
                       value={formData.rentalType}
                       onChange={handleChange}
-                      className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all cursor-pointer font-medium"
+                      className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all cursor-pointer"
                     >
                       <option value="Monthly">Monthly</option>
                       <option value="Weekly">Weekly</option>
@@ -947,6 +1089,48 @@ export function EditRentalOrderModal({
                 </div>
               </div>
 
+              {/* GST Percentage */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-semibold text-slate-900">
+                    GST Percentage (%)
+                  </label>
+                  <span className="text-xs text-slate-500 font-medium">Applied to rental charge</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Percent className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <input
+                      type="number"
+                      name="gstRate"
+                      value={formData.gstRate ?? "18"}
+                      onChange={handleChange}
+                      placeholder="18"
+                      min="0"
+                      max="100"
+                      step="any"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {["0", "5", "12", "18", "28"].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, gstRate: pct }))}
+                        className={`px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                          String(formData.gstRate) === pct
+                            ? "bg-[#083a60] text-white border-[#083a60] shadow-xs"
+                            : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        {pct}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               {/* Diesel Included & Operator Included Switch Boxes */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 {/* Diesel Included */}
@@ -991,6 +1175,41 @@ export function EditRentalOrderModal({
                   </div>
                 </label>
               </div>
+
+              {/* Live Calculation Preview */}
+              {formData.dailyRate && Number(formData.dailyRate) > 0 && formData.startDate && formData.endDate && (
+                <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-slate-50 p-4 space-y-2 text-xs">
+                  <div className="font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">
+                    Pricing Breakdown Preview
+                  </div>
+                  <div className="flex items-center justify-between text-slate-600 font-medium">
+                    <span>Duration: {liveTotals.durationText}</span>
+                    <span className="font-semibold text-slate-900">
+                      ₹{liveTotals.rentalCharge.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-600 font-medium">
+                    <span>GST ({liveTotals.gstRate}%)</span>
+                    <span className="font-semibold text-slate-900">
+                      ₹{liveTotals.gstAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  {Number(liveTotals.transportCharges) > 0 && (
+                    <div className="flex items-center justify-between text-slate-600 font-medium">
+                      <span>Transport Charges</span>
+                      <span className="font-semibold text-slate-900">
+                        ₹{Number(liveTotals.transportCharges).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
+                  <div className="border-t border-slate-200/80 pt-2 flex items-center justify-between text-sm">
+                    <span className="font-bold text-slate-900">Total Amount</span>
+                    <span className="font-extrabold text-[#083a60] text-base">
+                      ₹{liveTotals.totalAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}

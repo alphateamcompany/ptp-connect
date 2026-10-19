@@ -3,11 +3,15 @@ import { pgTable, serial, varchar, integer, numeric, timestamp, text, boolean } 
 export const generators = pgTable("generators", {
   id: serial("id").primaryKey(),
   generatorId: varchar("generator_id", { length: 50 }).notNull().unique(),
+  assetId: varchar("asset_id", { length: 100 }),
   name: varchar("name", { length: 255 }).notNull(),
   brand: varchar("brand", { length: 255 }),
   model: varchar("model", { length: 255 }).notNull(),
   capacityKva: numeric("capacity_kva", { precision: 8, scale: 2 }).notNull(),
+  manufacturingYear: varchar("manufacturing_year", { length: 50 }),
+  engineMake: varchar("engine_make", { length: 255 }),
   engineNumber: varchar("engine_number", { length: 100 }),
+  alternatorMake: varchar("alternator_make", { length: 255 }),
   alternatorNumber: varchar("alternator_number", { length: 100 }),
   controllerType: varchar("controller_type", { length: 100 }),
   serialNumber: varchar("serial_number", { length: 100 }),
@@ -16,6 +20,7 @@ export const generators = pgTable("generators", {
   purchaseCost: numeric("purchase_cost", { precision: 12, scale: 2 }),
   currentHours: integer("current_hours").default(0),
   location: varchar("location", { length: 255 }),
+  driveLink: text("drive_link"),
   status: varchar("status", { length: 50 }).notNull().default("Available"),
   dailyRate: numeric("daily_rate", { precision: 10, scale: 2 }),
   notes: text("notes"),
@@ -61,7 +66,7 @@ export const customers = pgTable("customers", {
   companyName: varchar("company_name", { length: 255 }).notNull(),
   gstNumber: varchar("gst_number", { length: 50 }),
   contactPerson: varchar("contact_person", { length: 255 }),
-  phone: varchar("phone", { length: 50 }),
+  phone: text("phone"),
   email: varchar("email", { length: 255 }),
   paymentTerms: varchar("payment_terms", { length: 100 }).default("Cash"),
   outstandingAmount: numeric("outstanding_amount", { precision: 12, scale: 2 }).default("0"),
@@ -79,8 +84,11 @@ export const rentalOrders = pgTable("rental_orders", {
   orderNumber: varchar("order_number", { length: 50 }).notNull().unique(),
   customerId: integer("customer_id").references(() => customers.id, { onDelete: "set null" }),
   customerName: varchar("customer_name", { length: 255 }).notNull(),
+  billingCompany: varchar("billing_company", { length: 255 }),
+  siteLocation: varchar("site_location", { length: 255 }),
   generatorId: integer("generator_id").references(() => generators.id, { onDelete: "set null" }),
   generatorName: varchar("generator_name", { length: 255 }).notNull(),
+  generatorKva: varchar("generator_kva", { length: 50 }),
   startDate: varchar("start_date", { length: 50 }).notNull(),
   endDate: varchar("end_date", { length: 50 }).notNull(),
   rentalType: varchar("rental_type", { length: 50 }).notNull().default("Monthly"),
@@ -90,6 +98,7 @@ export const rentalOrders = pgTable("rental_orders", {
   dieselIncluded: boolean("diesel_included").default(false).notNull(),
   operatorIncluded: boolean("operator_included").default(false).notNull(),
   rentalCharge: numeric("rental_charge", { precision: 12, scale: 2 }).notNull(),
+  gstRate: numeric("gst_rate", { precision: 5, scale: 2 }).default("18"),
   gstAmount: numeric("gst_amount", { precision: 12, scale: 2 }).notNull(),
   totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull(),
   status: varchar("status", { length: 50 }).notNull().default("Active"),
@@ -169,8 +178,18 @@ export const returns = pgTable("returns", {
   generatorCapacity: varchar("generator_capacity", { length: 50 }),
   customerName: varchar("customer_name", { length: 255 }).notNull(),
   siteLocation: varchar("site_location", { length: 255 }).notNull(),
+  // Dispatch / Start details
+  startDate: varchar("start_date", { length: 50 }),
+  startingHours: integer("starting_hours").default(0),
+  driverName: varchar("driver_name", { length: 255 }),
+  vehicleNumber: varchar("vehicle_number", { length: 100 }),
+  // Return / Closing details
   returnDate: varchar("return_date", { length: 50 }).notNull(),
+  closingDate: varchar("closing_date", { length: 50 }),
   closingHours: integer("closing_hours").default(0).notNull(),
+  returnDriverName: varchar("return_driver_name", { length: 255 }),
+  returnVehicleNumber: varchar("return_vehicle_number", { length: 100 }),
+  status: varchar("status", { length: 50 }).default("Completed"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -178,6 +197,9 @@ export const returns = pgTable("returns", {
 
 export type ReturnRecord = typeof returns.$inferSelect;
 export type NewReturnRecord = typeof returns.$inferInsert;
+export type TransportRecord = ReturnRecord;
+export type NewTransportRecord = NewReturnRecord;
+export const transports = returns;
 
 export const inventory = pgTable("inventory", {
   id: serial("id").primaryKey(),

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, ExternalLink } from "lucide-react";
 import { Generator } from "@/lib/db/schema";
 import { CreateGeneratorInput } from "@/app/generators/actions";
 
@@ -29,11 +29,15 @@ export function EditGeneratorModal({
     if (generator && isOpen) {
       setFormData({
         generatorId: generator.generatorId,
+        assetId: generator.assetId || "",
         name: generator.name,
-        brand: generator.brand || "",
+        brand: generator.brand || generator.name || "",
         model: generator.model,
         capacityKva: generator.capacityKva,
+        manufacturingYear: generator.manufacturingYear || "",
+        engineMake: generator.engineMake || "",
         engineNumber: generator.engineNumber || "",
+        alternatorMake: generator.alternatorMake || "",
         alternatorNumber: generator.alternatorNumber || "",
         controllerType: generator.controllerType || "",
         serialNumber: generator.serialNumber || "",
@@ -42,6 +46,7 @@ export function EditGeneratorModal({
         purchaseCost: generator.purchaseCost || "",
         currentHours: generator.currentHours ?? 0,
         location: generator.location || "",
+        driveLink: generator.driveLink || "",
         status: generator.status || "Available",
       });
       setError(null);
@@ -94,7 +99,10 @@ export function EditGeneratorModal({
 
     setLoading(true);
     try {
-      const res = await onSubmit(generator.id, formData);
+      const res = await onSubmit(generator.id, {
+        ...formData,
+        brand: formData.name,
+      });
       if (res.success) {
         onClose();
       } else {
@@ -150,7 +158,7 @@ export function EditGeneratorModal({
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-            {/* Row 1: Generator ID & Generator Name */}
+            {/* Row 1: Generator ID & Assert ID */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Generator ID
@@ -162,10 +170,35 @@ export function EditGeneratorModal({
                 onChange={handleChange}
                 placeholder="e.g. GEN-001"
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-[#f8fafc] text-slate-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Assert ID{" "}
+                {generator.assetId ? (
+                  <span className="text-xs text-amber-600 font-normal">(Fixed • cannot be modified)</span>
+                ) : (
+                  <span className="text-xs text-slate-400 font-normal">(Fixed once set)</span>
+                )}
+              </label>
+              <input
+                type="text"
+                name="assetId"
+                value={formData.assetId || ""}
+                onChange={handleChange}
+                placeholder="e.g. AST-001"
+                disabled={Boolean(generator.assetId)}
+                className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm transition-all ${
+                  generator.assetId
+                    ? "bg-slate-100 text-slate-500 cursor-not-allowed font-mono"
+                    : "bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent"
+                }`}
+              />
+            </div>
+
+            {/* Row 2: Generator Name & Capacity (kVA) */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Generator Name
@@ -175,23 +208,8 @@ export function EditGeneratorModal({
                 name="name"
                 value={formData.name || ""}
                 onChange={handleChange}
-                placeholder="e.g. Cummins 250 kVA - Set 1"
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
-              />
-            </div>
-
-            {/* Row 2: Brand & Capacity (kVA) */}
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Brand
-              </label>
-              <input
-                type="text"
-                name="brand"
-                value={formData.brand || ""}
-                onChange={handleChange}
                 placeholder="e.g. Cummins, Perkins, Kirloskar"
+                required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -213,7 +231,7 @@ export function EditGeneratorModal({
               />
             </div>
 
-            {/* Row 3: Model & Engine Number */}
+            {/* Row 3: Model & Year of Manufacture */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Model
@@ -225,6 +243,35 @@ export function EditGeneratorModal({
                 onChange={handleChange}
                 placeholder="e.g. C250D5"
                 required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Year of Manufacture
+              </label>
+              <input
+                type="text"
+                name="manufacturingYear"
+                value={formData.manufacturingYear || ""}
+                onChange={handleChange}
+                placeholder="e.g. 2023"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Row 4: Engine Make & Engine Number */}
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Engine Make
+              </label>
+              <input
+                type="text"
+                name="engineMake"
+                value={formData.engineMake || ""}
+                onChange={handleChange}
+                placeholder="e.g. Cummins, Perkins"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -243,7 +290,21 @@ export function EditGeneratorModal({
               />
             </div>
 
-            {/* Row 4: Alternator Number & Controller Type */}
+            {/* Row 5: Alternator Make & Alternator Number */}
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Alternator Make
+              </label>
+              <input
+                type="text"
+                name="alternatorMake"
+                value={formData.alternatorMake || ""}
+                onChange={handleChange}
+                placeholder="e.g. Stamford, Leroy Somer"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Alternator Number
@@ -258,6 +319,7 @@ export function EditGeneratorModal({
               />
             </div>
 
+            {/* Row 6: Controller Type & Fuel Tank (L) */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Controller Type
@@ -268,21 +330,6 @@ export function EditGeneratorModal({
                 value={formData.controllerType || ""}
                 onChange={handleChange}
                 placeholder="e.g. Deep Sea 7320, PowerCommand 1.1"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
-              />
-            </div>
-
-            {/* Row 5: Serial Number & Fuel Tank (L) */}
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Serial Number
-              </label>
-              <input
-                type="text"
-                name="serialNumber"
-                value={formData.serialNumber || ""}
-                onChange={handleChange}
-                placeholder="e.g. SN-2023-8941"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
@@ -302,7 +349,48 @@ export function EditGeneratorModal({
               />
             </div>
 
-            {/* Row 6: Purchase Date & Purchase Cost (₹) */}
+            {/* Row 7: Serial Number & Drive Link */}
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Serial Number
+              </label>
+              <input
+                type="text"
+                name="serialNumber"
+                value={formData.serialNumber || ""}
+                onChange={handleChange}
+                placeholder="e.g. SN-2023-8941"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-slate-900">
+                  Drive Link
+                </label>
+                {formData.driveLink && (
+                  <a
+                    href={formData.driveLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1 font-medium"
+                  >
+                    Open Link <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+              <input
+                type="url"
+                name="driveLink"
+                value={formData.driveLink || ""}
+                onChange={handleChange}
+                placeholder="https://drive.google.com/..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Row 8: Purchase Date & Purchase Cost (₹) */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Purchase Date
@@ -391,6 +479,11 @@ export function EditGeneratorModal({
                   </svg>
                 </div>
               </div>
+              {generator.status === "On Rent" && (
+                <p className="text-[11px] text-blue-600 font-medium mt-1">
+                  Auto-updated from active rental orders.
+                </p>
+              )}
             </div>
           </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Trash2, Loader2, Pencil } from "lucide-react";
+import { Trash2, Loader2, Pencil, MapPin, Zap } from "lucide-react";
 import { RentalOrder } from "@/lib/db/schema";
 
 interface RentalOrderCardProps {
@@ -97,9 +97,29 @@ export function RentalOrderCard({
         <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-snug">
           {order.customerName}
         </h3>
-        <p className="text-sm font-medium text-slate-500 mt-0.5 mb-5">
-          {order.generatorName}
-        </p>
+        {order.billingCompany && (
+          <p className="text-xs text-slate-500 font-medium mt-0.5 truncate" title={order.billingCompany}>
+            Billing: {order.billingCompany}
+          </p>
+        )}
+        <div className="flex items-center gap-2 mt-1 mb-3">
+          <p className="text-sm font-medium text-slate-600 truncate">
+            {order.generatorName}
+          </p>
+          {order.generatorKva && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 shrink-0">
+              <Zap className="w-3 h-3 text-amber-600" />
+              {order.generatorKva} kVA
+            </span>
+          )}
+        </div>
+
+        {order.siteLocation && (
+          <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-4 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span className="truncate">{order.siteLocation}</span>
+          </div>
+        )}
 
         {/* Details 2x2 Grid */}
         <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs sm:text-sm text-slate-600 mb-4">
@@ -157,7 +177,7 @@ export function RentalOrderCard({
             </span>
           </div>
           <div className="flex items-center justify-between text-slate-500">
-            <span>GST (18%)</span>
+            <span>GST ({order.gstRate ? `${order.gstRate}%` : "18%"})</span>
             <span className="font-medium text-slate-900">
               {formatINR(order.gstAmount)}
             </span>

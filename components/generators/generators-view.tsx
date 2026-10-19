@@ -45,9 +45,12 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
       const matchesSearch =
         !q ||
         gen.generatorId.toLowerCase().includes(q) ||
+        (gen.assetId && gen.assetId.toLowerCase().includes(q)) ||
         gen.name.toLowerCase().includes(q) ||
         (gen.brand && gen.brand.toLowerCase().includes(q)) ||
         gen.model.toLowerCase().includes(q) ||
+        (gen.engineMake && gen.engineMake.toLowerCase().includes(q)) ||
+        (gen.alternatorMake && gen.alternatorMake.toLowerCase().includes(q)) ||
         (gen.location && gen.location.toLowerCase().includes(q));
 
       if (!matchesSearch) return false;
@@ -175,7 +178,7 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by ID, brand, model (e.g. GEN-001, Cummins)..."
+            placeholder="Search by ID, Assert ID, name, model..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />
         </div>
@@ -212,7 +215,7 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by ID, brand, model (e.g. GEN-001, Cummins)..."
+            placeholder="Search by ID, Assert ID, name, model..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
           />
         </div>

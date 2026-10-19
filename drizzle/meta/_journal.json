@@ -50,6 +50,55 @@
       "when": 1790337890000,
       "tag": "0006_maintenance_records",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790768160000,
+      "tag": "0007_returns",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790775180000,
+      "tag": "0008_inventory",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791264840000,
+      "tag": "0009_finance",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792401800000,
+      "tag": "0010_generator_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792405000000,
+      "tag": "0011_customer_phone_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792410000000,
+      "tag": "0012_rental_order_enhancements",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792415000000,
+      "tag": "0013_transport_returns",
+      "breakpoints": true
     }
   ]
 }

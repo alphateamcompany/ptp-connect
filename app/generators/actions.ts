@@ -4,14 +4,19 @@ import { db } from "@/lib/db";
 import { generators } from "@/lib/db/schema";
 import { desc, ilike, or, eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { syncGeneratorStatusesWithRentals } from "@/lib/sync-generators";
 
 export interface CreateGeneratorInput {
   generatorId: string;
+  assetId?: string;
   name: string;
   brand?: string;
   model: string;
   capacityKva: number | string;
+  manufacturingYear?: string;
+  engineMake?: string;
   engineNumber?: string;
+  alternatorMake?: string;
   alternatorNumber?: string;
   controllerType?: string;
   serialNumber?: string;
@@ -20,11 +25,15 @@ export interface CreateGeneratorInput {
   purchaseCost?: number | string;
   currentHours?: number;
   location?: string;
+  driveLink?: string;
   status: string;
 }
 
 export async function getGenerators(search?: string, status?: string) {
   try {
+    // Keep generator statuses in sync with active rental orders
+    await syncGeneratorStatusesWithRentals();
+
     const conditions = [];
 
     if (search && search.trim() !== "") {
@@ -32,10 +41,13 @@ export async function getGenerators(search?: string, status?: string) {
       conditions.push(
         or(
           ilike(generators.generatorId, q),
+          ilike(generators.assetId, q),
           ilike(generators.name, q),
           ilike(generators.brand, q),
           ilike(generators.model, q),
-          ilike(generators.location, q)
+          ilike(generators.location, q),
+          ilike(generators.engineMake, q),
+          ilike(generators.alternatorMake, q)
         )
       );
     }
@@ -80,11 +92,15 @@ export async function createGenerator(data: CreateGeneratorInput) {
       .insert(generators)
       .values({
         generatorId: data.generatorId.trim(),
+        assetId: data.assetId?.trim() || null,
         name: data.name.trim(),
-        brand: data.brand?.trim() || null,
+        brand: data.brand?.trim() || data.name.trim() || null,
         model: data.model.trim(),
         capacityKva: String(data.capacityKva),
+        manufacturingYear: data.manufacturingYear?.trim() || null,
+        engineMake: data.engineMake?.trim() || null,
         engineNumber: data.engineNumber?.trim() || null,
+        alternatorMake: data.alternatorMake?.trim() || null,
         alternatorNumber: data.alternatorNumber?.trim() || null,
         controllerType: data.controllerType?.trim() || null,
         serialNumber: data.serialNumber?.trim() || null,
@@ -93,6 +109,7 @@ export async function createGenerator(data: CreateGeneratorInput) {
         purchaseCost: data.purchaseCost ? String(data.purchaseCost) : null,
         currentHours: data.currentHours ? Number(data.currentHours) : 0,
         location: data.location?.trim() || null,
+        driveLink: data.driveLink?.trim() || null,
         status: data.status?.trim() || "Available",
       })
       .returning();
@@ -135,11 +152,27 @@ export async function updateGenerator(
       updatedAt: new Date(),
     };
     if (data.generatorId !== undefined) updateValues.generatorId = data.generatorId.trim();
-    if (data.name !== undefined) updateValues.name = data.name.trim();
+    if (data.assetId !== undefined && data.assetId.trim()) {
+      // Assert ID is fixed once entered and cannot be changed later
+      const [current] = await db
+        .select({ assetId: generators.assetId })
+        .from(generators)
+        .where(eq(generators.id, id));
+      if (current && !current.assetId) {
+        updateValues.assetId = data.assetId.trim();
+      }
+    }
+    if (data.name !== undefined) {
+      updateValues.name = data.name.trim();
+      if (data.brand === undefined) updateValues.brand = data.name.trim();
+    }
     if (data.brand !== undefined) updateValues.brand = data.brand.trim() || null;
     if (data.model !== undefined) updateValues.model = data.model.trim();
     if (data.capacityKva !== undefined) updateValues.capacityKva = String(data.capacityKva);
+    if (data.manufacturingYear !== undefined) updateValues.manufacturingYear = data.manufacturingYear.trim() || null;
+    if (data.engineMake !== undefined) updateValues.engineMake = data.engineMake.trim() || null;
     if (data.engineNumber !== undefined) updateValues.engineNumber = data.engineNumber.trim() || null;
+    if (data.alternatorMake !== undefined) updateValues.alternatorMake = data.alternatorMake.trim() || null;
     if (data.alternatorNumber !== undefined) updateValues.alternatorNumber = data.alternatorNumber.trim() || null;
     if (data.controllerType !== undefined) updateValues.controllerType = data.controllerType.trim() || null;
     if (data.serialNumber !== undefined) updateValues.serialNumber = data.serialNumber.trim() || null;
@@ -152,6 +185,7 @@ export async function updateGenerator(
     }
     if (data.currentHours !== undefined) updateValues.currentHours = Number(data.currentHours);
     if (data.location !== undefined) updateValues.location = data.location.trim() || null;
+    if (data.driveLink !== undefined) updateValues.driveLink = data.driveLink.trim() || null;
     if (data.status !== undefined) updateValues.status = data.status.trim() || "Available";
 
     const updated = await db
@@ -166,7 +200,14 @@ export async function updateGenerator(
     return { success: true, data: updated[0] };
   } catch (error) {
     console.error("Failed to update generator:", error);
-    return { success: false, error: (error as Error).message };
+    const msg = (error as Error).message;
+    if (msg.includes("unique constraint") || msg.includes("generator_id")) {
+      return {
+        success: false,
+        error: `Generator ID "${data.generatorId}" is already in use. Please use a unique ID.`,
+      };
+    }
+    return { success: false, error: msg };
   }
 }
 

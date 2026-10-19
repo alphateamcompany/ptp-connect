@@ -10,6 +10,7 @@ import {
   Zap,
   Plus,
   Pencil,
+  ExternalLink,
 } from "lucide-react";
 
 interface GeneratorTableProps {
@@ -38,6 +39,13 @@ export function GeneratorTable({
       currency: "INR",
       maximumFractionDigits: 0,
     }).format(num);
+  };
+
+  const getPurchasedYear = (dateStr: string | null) => {
+    if (!dateStr) return "-";
+    const match = dateStr.match(/\b(19\d\d|20\d\d)\b/);
+    if (match) return match[1];
+    return dateStr;
   };
 
   const getStatusBadge = (status: string) => {
@@ -114,11 +122,11 @@ export function GeneratorTable({
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/60 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <th className="py-3.5 px-5">ID</th>
+              <th className="py-3.5 px-4">Assert ID</th>
               <th className="py-3.5 px-4">Generator</th>
               <th className="py-3.5 px-4 hidden sm:table-cell">Capacity</th>
               <th className="py-3.5 px-4 hidden sm:table-cell">Location</th>
-              <th className="py-3.5 px-4 hidden md:table-cell">Running Hours</th>
-              <th className="py-3.5 px-4 hidden md:table-cell">Purchase Details</th>
+              <th className="py-3.5 px-4 hidden sm:table-cell">Purchased Year</th>
               <th className="py-3.5 px-4">Status</th>
               <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
@@ -139,14 +147,27 @@ export function GeneratorTable({
                   </span>
                 </td>
 
-                {/* Generator Name */}
+                {/* Assert ID */}
+                <td className="py-4 px-4 whitespace-nowrap">
+                  {gen.assetId ? (
+                    <span className="font-mono font-medium text-xs text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg inline-block">
+                      {gen.assetId}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400 font-mono">—</span>
+                  )}
+                </td>
+
+                {/* Generator Name & Model */}
                 <td className="py-4 px-4">
-                  <div
-                    className="font-semibold text-slate-900 leading-tight"
-                    title={[gen.brand, gen.model].filter(Boolean).join(" • ") || undefined}
-                  >
+                  <div className="font-semibold text-slate-900 leading-tight">
                     {gen.name}
                   </div>
+                  {gen.model && (
+                    <div className="text-xs text-slate-500 font-medium mt-0.5">
+                      {gen.model}
+                    </div>
+                  )}
                 </td>
 
                 {/* Capacity */}
@@ -173,24 +194,14 @@ export function GeneratorTable({
                   )}
                 </td>
 
-                {/* Running Hours */}
-                <td className="py-4 px-4 hidden md:table-cell">
-                  <div className="flex items-center gap-1.5 text-slate-700 text-xs font-medium">
-                    <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>
-                      {(gen.currentHours ?? 0).toLocaleString()} hrs
-                    </span>
+                {/* Purchased Year */}
+                <td className="py-4 px-4 hidden sm:table-cell whitespace-nowrap">
+                  <div className="text-xs font-semibold text-slate-800">
+                    {getPurchasedYear(gen.purchaseDate)}
                   </div>
-                </td>
-
-                {/* Purchase Cost & Date */}
-                <td className="py-4 px-4 hidden md:table-cell">
-                  <div className="text-xs font-medium text-slate-800">
-                    {formatCurrency(gen.purchaseCost)}
-                  </div>
-                  {gen.purchaseDate && (
+                  {gen.purchaseCost && (
                     <div className="text-[11px] text-slate-400 mt-0.5">
-                      {gen.purchaseDate}
+                      {formatCurrency(gen.purchaseCost)}
                     </div>
                   )}
                 </td>
@@ -201,6 +212,19 @@ export function GeneratorTable({
                 {/* Actions */}
                 <td className="py-4 px-4 text-right">
                   <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                    {gen.driveLink && (
+                      <a
+                        href={gen.driveLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        title="Open Drive Link"
+                        aria-label={`Open Drive link for ${gen.name}`}
+                        className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer shrink-0 inline-flex items-center"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
                     <button
                       type="button"
                       onClick={(e) => {

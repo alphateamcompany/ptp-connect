@@ -1,36 +1,35 @@
 Client required for 
 
-On Generator page 
+On Generator page: [DONE]
 - wanna add some more fields too.. 
+    - Purchased Year visible in the table -
+    - year of manufactured -
+    - engine make and alternator make (String) - 
+    - No need of Generator name, change the brand to Generator name. -
+    - on table show the model name as sub text below the generator name. -
     - Assert ID : fixed 
     - ID editable 
-    - Purchased Year visible in the table 
-    - year of manifacuted 
-    - engine make and allternator make (String)
-    - No need of Generator name, change the brand to Generator name. 
-    - on table show the model name as sub text below the generator name.
     - Drive link
-    - Change the current location and current Running hours to Purchased
     - Auto status update linked to RO 
 
 
-On customer page: 
+On customer page: [DONE]
     - Don't show GST at the table 
     - On company column in table show the company name as title and customer as subtitle 
     - Show contact person name and contact phone number in the table 
     - Give a option to add more than one phone numbers 
     - view model 
-    - remove the icon 
 
-On Rental order:
-    - Manual Order ID/Number (Set it to unique )
-    - Add billing company 
-    - Show site in the table 
-    - Show generator kVA
-    - The pricing calculation is mismatching... not calculating correctly 
-    - Add GST percentage number when create RO 
+On Rental order: [DONE]
+    - Manual Order ID/Number (Set it to unique ) -
+    - Add billing company -
+    - Show site in the table -
+    - Show generator kVA -
+    - Add GST percentage number when create RO -
+    - The pricing calculation is mismatching... not calculating correctly [FIXED] 
 
-On Return page:
+
+On Return page: [DONE]
     - Merge the Dispatch and return into one tab "Transport" 
     - Remove return no
     - add Start date, Starting hours, Driver name, vehicle number.

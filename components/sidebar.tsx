@@ -56,19 +56,14 @@ const navItems: NavItem[] = [
     icon: IndianRupee,
   },
   {
-    label: "Dispatch",
-    href: "/dispatch",
+    label: "Transport",
+    href: "/transport",
     icon: Truck,
   },
   {
     label: "Site Monitoring",
     href: "/monitoring",
     icon: MapPin,
-  },
-  {
-    label: "Returns",
-    href: "/returns",
-    icon: RotateCcw,
   },
   {
     label: "Maintenance",
@@ -136,6 +131,10 @@ export function Sidebar() {
           const isActive =
             item.href === "/"
               ? pathname === "/"
+              : item.href === "/transport"
+              ? pathname.startsWith("/transport") ||
+                pathname.startsWith("/returns") ||
+                pathname.startsWith("/dispatch")
               : !item.disabled && pathname.startsWith(item.href);
 
           if (item.disabled) {

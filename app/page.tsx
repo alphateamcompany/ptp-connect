@@ -6,6 +6,7 @@ import { sql, eq } from "drizzle-orm";
 import Link from "next/link";
 import { getFinanceStats } from "@/app/finance/actions";
 import { formatINR } from "@/lib/utils";
+import { syncGeneratorStatusesWithRentals } from "@/lib/sync-generators";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ export default async function DashboardPage() {
   let onRentCount = 0;
 
   try {
+    await syncGeneratorStatusesWithRentals();
+
     const [totalRes] = await db
       .select({ count: sql<number>`count(*)` })
       .from(generators);

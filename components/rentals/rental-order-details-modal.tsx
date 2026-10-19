@@ -13,6 +13,7 @@ import {
   Building2,
   ShieldCheck,
   Loader2,
+  MapPin,
 } from "lucide-react";
 import { RentalOrder } from "@/lib/db/schema";
 
@@ -193,6 +194,11 @@ export function RentalOrderDetailsModal({
               <div className="font-bold text-slate-900 text-base">
                 {order.customerName}
               </div>
+              {order.billingCompany && (
+                <div className="text-xs text-slate-600 font-medium mt-1">
+                  Billing: {order.billingCompany}
+                </div>
+              )}
               {order.customerId && (
                 <div className="text-xs text-slate-500 mt-0.5">
                   Customer ID: #{order.customerId}
@@ -209,6 +215,12 @@ export function RentalOrderDetailsModal({
               <div className="font-bold text-slate-900 text-base">
                 {order.generatorName}
               </div>
+              {order.generatorKva && (
+                <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                  <Zap className="w-3 h-3 text-amber-600" />
+                  <span>{order.generatorKva} kVA</span>
+                </div>
+              )}
               {order.generatorId && (
                 <div className="text-xs text-slate-500 mt-0.5">
                   Generator ID: #{order.generatorId}
@@ -251,6 +263,17 @@ export function RentalOrderDetailsModal({
               </div>
             </div>
 
+            {/* Site / Delivery Location */}
+            {order.siteLocation && (
+              <div className="pt-2 border-t border-slate-100 flex items-center gap-2 text-xs">
+                <span className="text-slate-500 font-medium">Site / Location:</span>
+                <span className="font-semibold text-slate-800 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                  {order.siteLocation}
+                </span>
+              </div>
+            )}
+
             {/* Inclusions */}
             <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2">
               <span className="text-xs text-slate-500 font-medium mr-1">
@@ -289,7 +312,7 @@ export function RentalOrderDetailsModal({
                 </span>
               </div>
               <div className="flex items-center justify-between text-slate-600">
-                <span>GST (18%)</span>
+                <span>GST ({order.gstRate ? `${order.gstRate}%` : "18%"})</span>
                 <span className="font-semibold text-slate-900">
                   {formatINR(order.gstAmount)}
                 </span>

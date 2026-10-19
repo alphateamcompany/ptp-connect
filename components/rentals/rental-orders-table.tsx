@@ -12,8 +12,16 @@ import {
   Calendar,
   Fuel,
   UserCheck,
+  MapPin,
+  Zap,
 } from "lucide-react";
 import { RentalOrder } from "@/lib/db/schema";
+
+function extractKva(name?: string | null): string | null {
+  if (!name) return null;
+  const match = name.match(/(\d+(?:\.\d+)?)\s*kVA/i);
+  return match ? match[1] : null;
+}
 
 interface RentalOrdersTableProps {
   orders: RentalOrder[];
@@ -152,6 +160,11 @@ export function RentalOrdersTable({
                 </div>
               </th>
 
+              {/* Site */}
+              <th className="py-3.5 px-4 font-bold whitespace-nowrap">
+                Site
+              </th>
+
               {/* Generator */}
               <th className="py-3.5 px-4 font-bold whitespace-nowrap">
                 Generator
@@ -227,6 +240,23 @@ export function RentalOrdersTable({
                     <div className="font-semibold text-slate-900 text-sm max-w-[200px] truncate" title={order.customerName}>
                       {order.customerName}
                     </div>
+                    {order.billingCompany && (
+                      <div className="text-[11px] text-slate-500 truncate max-w-[200px]" title={order.billingCompany}>
+                        Billing: {order.billingCompany}
+                      </div>
+                    )}
+                  </td>
+
+                  {/* Site */}
+                  <td className="py-3.5 px-4">
+                    {order.siteLocation ? (
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 max-w-[180px] truncate" title={order.siteLocation}>
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{order.siteLocation}</span>
+                      </div>
+                    ) : (
+                      <span className="text-slate-400 text-xs">—</span>
+                    )}
                   </td>
 
                   {/* Generator */}
@@ -234,6 +264,12 @@ export function RentalOrdersTable({
                     <div className="font-medium text-slate-800 text-sm max-w-[200px] truncate" title={order.generatorName}>
                       {order.generatorName}
                     </div>
+                    {(order.generatorKva || extractKva(order.generatorName)) && (
+                      <div className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/60">
+                        <Zap className="w-2.5 h-2.5 text-amber-600" />
+                        <span>{order.generatorKva || extractKva(order.generatorName)} kVA</span>
+                      </div>
+                    )}
                   </td>
 
                   {/* Rental Period */}

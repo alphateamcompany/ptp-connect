@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Generator } from "@/lib/db/schema";
-import { Cpu } from "lucide-react";
+import { Cpu, ExternalLink } from "lucide-react";
 
 interface GeneratorCardProps {
   generator: Generator;
@@ -62,13 +62,21 @@ export function GeneratorCard({ generator, onClick }: GeneratorCardProps) {
             </div>
 
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-slate-900 text-sm tracking-tight leading-tight truncate">
-                {generator.generatorId}
-              </span>
-              <span className="text-xs text-slate-500 font-medium truncate mt-0.5">
-                {generator.brand || "Generic"}
-                {generator.model ? ` • ${generator.model}` : ""}
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-bold text-slate-900 text-sm tracking-tight leading-tight truncate">
+                  {generator.generatorId}
+                </span>
+                {generator.assetId && (
+                  <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                    {generator.assetId}
+                  </span>
+                )}
+              </div>
+              {generator.model && (
+                <span className="text-xs text-slate-500 font-medium truncate mt-0.5">
+                  {generator.model}
+                </span>
+              )}
             </div>
           </div>
 
@@ -99,11 +107,25 @@ export function GeneratorCard({ generator, onClick }: GeneratorCardProps) {
           </div>
         </div>
 
-        <div className="text-xs truncate">
-          <span className="text-slate-500">Location: </span>
-          <span className="font-bold text-slate-800">
-            {generator.location || "Not assigned"}
-          </span>
+        <div className="flex items-center justify-between text-xs pt-0.5">
+          <div className="truncate">
+            <span className="text-slate-500">Location: </span>
+            <span className="font-bold text-slate-800">
+              {generator.location || "Not assigned"}
+            </span>
+          </div>
+          {generator.driveLink && (
+            <a
+              href={generator.driveLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-blue-600 hover:text-blue-800 shrink-0 p-0.5"
+              title="Open Drive Link"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
       </div>
     </div>

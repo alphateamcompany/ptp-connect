@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Plus, Trash2 } from "lucide-react";
 import { Customer } from "@/lib/db/schema";
 import { CreateCustomerInput } from "@/app/customers/actions";
 
@@ -26,12 +26,17 @@ export function EditCustomerModal({
     companyName: customer?.companyName || "",
     gstNumber: customer?.gstNumber || "",
     contactPerson: customer?.contactPerson || "",
-    phone: customer?.phone || "",
     email: customer?.email || "",
     paymentTerms: customer?.paymentTerms || "Cash",
     billingAddress: customer?.billingAddress || "",
     siteAddress: customer?.siteAddress || "",
   }));
+
+  const [phoneNumbers, setPhoneNumbers] = useState<string[]>(() => {
+    if (!customer?.phone) return [""];
+    const split = customer.phone.split(/[,;\n]+/).map((p) => p.trim()).filter(Boolean);
+    return split.length > 0 ? split : [""];
+  });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +66,22 @@ export function EditCustomerModal({
     }));
   };
 
+  const handlePhoneChange = (index: number, val: string) => {
+    setPhoneNumbers((prev) => {
+      const next = [...prev];
+      next[index] = val;
+      return next;
+    });
+  };
+
+  const handleAddPhone = () => {
+    setPhoneNumbers((prev) => [...prev, ""]);
+  };
+
+  const handleRemovePhone = (index: number) => {
+    setPhoneNumbers((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -72,8 +93,14 @@ export function EditCustomerModal({
 
     setLoading(true);
     try {
+      const combinedPhone = phoneNumbers
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .join(", ");
+
       const res = await onSubmit(customer.id, {
         ...formData,
+        phone: combinedPhone,
         customerName: formData.customerName.trim() || formData.companyName.trim(),
         companyName: formData.companyName.trim() || formData.customerName.trim(),
       });
@@ -189,21 +216,51 @@ export function EditCustomerModal({
               />
             </div>
 
-            {/* Row 3: Phone & Email */}
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Phone
-              </label>
-              <input
-                type="text"
-                name="phone"
-                value={formData.phone || ""}
-                onChange={handleChange}
-                placeholder="e.g. +91 98765 43210"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
-              />
+            {/* Row 3: Multi-phone input */}
+            <div className="sm:col-span-2">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-slate-900">
+                  Contact Phone Number{phoneNumbers.length > 1 ? "s" : ""}
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAddPhone}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#083a60] hover:text-[#0c4a7e] bg-blue-50/70 hover:bg-blue-100/70 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add another number</span>
+                </button>
+              </div>
+              <div className="space-y-2">
+                {phoneNumbers.map((phone, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => handlePhoneChange(idx, e.target.value)}
+                      placeholder={
+                        idx === 0
+                          ? "e.g. +91 98765 43210 (Primary Phone)"
+                          : `Secondary Phone ${idx + 1}`
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+                    />
+                    {phoneNumbers.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhone(idx)}
+                        className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer shrink-0"
+                        title="Remove phone number"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
+            {/* Row 4: Email & Payment Terms */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Email
@@ -218,8 +275,7 @@ export function EditCustomerModal({
               />
             </div>
 
-            {/* Row 4: Payment Terms */}
-            <div className="sm:col-span-1">
+            <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Payment Terms
               </label>

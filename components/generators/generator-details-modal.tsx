@@ -15,6 +15,7 @@ import {
   Gauge,
   Fuel,
   Hash,
+  ExternalLink,
 } from "lucide-react";
 
 interface GeneratorDetailsModalProps {
@@ -116,14 +117,19 @@ export function GeneratorDetailsModal({
               <Cpu className="w-5 h-5 text-amber-400 stroke-[2.3]" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-slate-900 text-lg">
                   {generator.generatorId}
                 </span>
+                {generator.assetId && (
+                  <span className="text-xs font-mono font-semibold text-[#083a60] bg-blue-50/80 border border-blue-200/80 px-2 py-0.5 rounded-md">
+                    Assert ID: {generator.assetId}
+                  </span>
+                )}
                 {getStatusBadge(generator.status)}
               </div>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {generator.brand || "Generic"} • {generator.model}
+                {generator.name} • {generator.model}
               </p>
             </div>
           </div>
@@ -191,9 +197,33 @@ export function GeneratorDetailsModal({
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-sm bg-white rounded-xl">
               <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
+                <span className="text-xs text-slate-500 block">Year of Manufacture</span>
+                <span className="font-semibold text-slate-800 mt-0.5 block">
+                  {generator.manufacturingYear || "-"}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
+                <span className="text-xs text-slate-500 block">Serial Number</span>
+                <span className="font-semibold text-slate-800 mt-0.5 block font-mono text-xs">
+                  {generator.serialNumber || "-"}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
+                <span className="text-xs text-slate-500 block">Engine Make</span>
+                <span className="font-semibold text-slate-800 mt-0.5 block">
+                  {generator.engineMake || "-"}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
                 <span className="text-xs text-slate-500 block">Engine Number</span>
                 <span className="font-semibold text-slate-800 mt-0.5 block font-mono text-xs">
                   {generator.engineNumber || "-"}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
+                <span className="text-xs text-slate-500 block">Alternator Make</span>
+                <span className="font-semibold text-slate-800 mt-0.5 block">
+                  {generator.alternatorMake || "-"}
                 </span>
               </div>
               <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
@@ -209,10 +239,33 @@ export function GeneratorDetailsModal({
                 </span>
               </div>
               <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
-                <span className="text-xs text-slate-500 block">Serial Number</span>
-                <span className="font-semibold text-slate-800 mt-0.5 block font-mono text-xs">
-                  {generator.serialNumber || "-"}
+                <span className="text-xs text-slate-500 block">Model</span>
+                <span className="font-semibold text-slate-800 mt-0.5 block">
+                  {generator.model || "-"}
                 </span>
+              </div>
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
+                <span className="text-xs text-slate-500 block">Assert ID</span>
+                <span className="font-semibold text-slate-800 mt-0.5 block font-mono text-xs">
+                  {generator.assetId || "-"}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
+                <span className="text-xs text-slate-500 block">Drive Link</span>
+                {generator.driveLink ? (
+                  <a
+                    href={generator.driveLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline mt-1 truncate max-w-full"
+                    title={generator.driveLink}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Open Drive Link</span>
+                  </a>
+                ) : (
+                  <span className="text-slate-400 mt-0.5 block text-xs">-</span>
+                )}
               </div>
             </div>
           </div>
@@ -256,7 +309,18 @@ export function GeneratorDetailsModal({
             <span className="hidden sm:inline">Delete Generator</span>
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {generator.driveLink && (
+              <a
+                href={generator.driveLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 transition-colors cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Drive Link</span>
+              </a>
+            )}
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-white transition-colors cursor-pointer"

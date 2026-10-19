@@ -15,7 +15,7 @@ import {
   generators,
   type Generator,
 } from "@/lib/db/schema";
-import { desc, ilike, or, eq } from "drizzle-orm";
+import { desc, ilike, or, eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export interface CreateInvoiceInput {

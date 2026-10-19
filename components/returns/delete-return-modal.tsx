@@ -40,7 +40,7 @@ export function DeleteReturnModal({
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900">
-              Delete Return Record
+              Delete Transport Record
             </h3>
             <p className="text-xs text-slate-500">
               This action cannot be undone.
@@ -49,12 +49,8 @@ export function DeleteReturnModal({
         </div>
 
         <p className="text-sm text-slate-600 leading-relaxed">
-          Are you sure you want to delete return record{" "}
+          Are you sure you want to delete the transport record for rental order{" "}
           <span className="font-semibold text-slate-900 font-mono">
-            {returnRecord.returnNumber}
-          </span>{" "}
-          for rental order{" "}
-          <span className="font-semibold text-slate-900">
             {returnRecord.orderNumber}
           </span>{" "}
           ({returnRecord.customerName})?

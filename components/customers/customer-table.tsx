@@ -1,10 +1,12 @@
 "use client";
 
+import React from "react";
 import { Customer } from "@/lib/db/schema";
-import { User, Pencil, Trash2 } from "lucide-react";
+import { Building2, User, Phone, Pencil, Trash2, Eye } from "lucide-react";
 
 interface CustomerTableProps {
   customers: Customer[];
+  onView: (customer: Customer) => void;
   onEdit: (customer: Customer) => void;
   onDelete: (customer: Customer) => void;
 }
@@ -18,6 +20,7 @@ export function formatIndianCurrency(amount: string | number | null | undefined)
 
 export function CustomerTable({
   customers,
+  onView,
   onEdit,
   onDelete,
 }: CustomerTableProps) {
@@ -46,14 +49,11 @@ export function CustomerTable({
               <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
                 COMPANY
               </th>
-              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase hidden md:table-cell">
-                CONTACT
+              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+                CONTACT PERSON
               </th>
-              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase hidden sm:table-cell">
-                PHONE
-              </th>
-              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase hidden lg:table-cell">
-                GST
+              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+                CONTACT PHONE NUMBER
               </th>
               <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase text-right">
                 ACTIONS
@@ -62,55 +62,93 @@ export function CustomerTable({
           </thead>
           <tbody className="divide-y divide-slate-100">
             {customers.map((customer) => {
+              const phoneList = customer.phone
+                ? customer.phone
+                    .split(/[,;\n]+/)
+                    .map((p) => p.trim())
+                    .filter(Boolean)
+                : [];
+
               return (
                 <tr
                   key={customer.id}
-                  className="hover:bg-slate-50/70 transition-colors group"
+                  onClick={() => onView(customer)}
+                  className="hover:bg-slate-50/70 transition-colors group cursor-pointer"
                 >
-                  {/* COMPANY Column */}
+                  {/* COMPANY Column: Company Name (Title) & Customer Name (Subtitle) */}
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3.5">
                       <div className="w-10 h-10 rounded-xl bg-[#e3ecf5] flex items-center justify-center text-[#255b88] shrink-0 border border-[#d2dfed]">
-                        <User className="w-5 h-5 stroke-[1.75]" />
+                        <Building2 className="w-5 h-5 stroke-[1.75]" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-bold text-slate-900 truncate">
                           {customer.companyName || customer.customerName}
                         </span>
                         <span className="text-xs text-slate-500 truncate mt-0.5">
-                          {customer.email || "No email"}
+                          {customer.customerName || "—"}
                         </span>
                       </div>
                     </div>
                   </td>
 
-                  {/* CONTACT Column */}
-                  <td className="py-4 px-6 hidden md:table-cell">
-                    <span className="text-sm font-medium text-slate-800">
-                      {customer.contactPerson || customer.customerName || "—"}
-                    </span>
+                  {/* CONTACT PERSON Column */}
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-800">
+                        {customer.contactPerson || "—"}
+                      </span>
+                    </div>
                   </td>
 
-                  {/* PHONE Column */}
-                  <td className="py-4 px-6 hidden sm:table-cell">
-                    <span className="text-sm font-medium text-slate-800 whitespace-nowrap">
-                      {customer.phone || "—"}
-                    </span>
+                  {/* CONTACT PHONE NUMBER Column */}
+                  <td className="py-4 px-6">
+                    {phoneList.length === 0 ? (
+                      <span className="text-sm text-slate-400">—</span>
+                    ) : (
+                      <div className="flex flex-col gap-1.5 items-start">
+                        {phoneList.map((phone, idx) => (
+                          <a
+                            key={idx}
+                            href={`tel:${phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs sm:text-sm font-medium text-slate-700 hover:text-[#083a60] inline-flex items-center gap-1.5 transition-colors"
+                            title={`Call ${phone}`}
+                          >
+                            <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>{phone}</span>
+                            {idx === 0 && phoneList.length > 1 && (
+                              <span className="text-[10px] font-semibold text-[#083a60] bg-blue-50 border border-blue-100 px-1 rounded">
+                                Main
+                              </span>
+                            )}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </td>
 
-                  {/* GST Column */}
-                  <td className="py-4 px-6 hidden lg:table-cell">
-                    <span className="text-sm font-medium text-slate-700 tracking-tight">
-                      {customer.gstNumber || "—"}
-                    </span>
-                  </td>
-
-                  {/* ACTIONS Column */}
+                  {/* ACTIONS Column: View, Edit, Delete */}
                   <td className="py-4 px-6 text-right">
-                    <div className="flex items-center justify-end gap-3">
+                    <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
-                        onClick={() => onEdit(customer)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onView(customer);
+                        }}
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-[#083a60] hover:bg-slate-100 transition-colors cursor-pointer"
+                        title="View customer details"
+                        aria-label={`View ${customer.companyName}`}
+                      >
+                        <Eye className="w-4 h-4 stroke-[1.75]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(customer);
+                        }}
                         className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                         title="Edit customer"
                         aria-label={`Edit ${customer.companyName}`}
@@ -119,7 +157,10 @@ export function CustomerTable({
                       </button>
                       <button
                         type="button"
-                        onClick={() => onDelete(customer)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(customer);
+                        }}
                         className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
                         title="Delete customer"
                         aria-label={`Delete ${customer.companyName}`}
