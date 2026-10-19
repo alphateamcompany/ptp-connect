@@ -19,7 +19,7 @@ import {
   IndianRupee,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 
 interface NavItem {
   label: string;
@@ -27,6 +27,7 @@ interface NavItem {
   icon: React.ElementType;
   badge?: string;
   disabled?: boolean;
+  separatorAfter?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -51,14 +52,10 @@ const navItems: NavItem[] = [
     icon: FileText,
   },
   {
-    label: "Finance",
-    href: "/finance",
-    icon: IndianRupee,
-  },
-  {
     label: "Transport",
     href: "/transport",
     icon: Truck,
+    separatorAfter: true,
   },
   {
     label: "Site Monitoring",
@@ -74,6 +71,11 @@ const navItems: NavItem[] = [
     label: "Inventory",
     href: "/inventory",
     icon: Package,
+  },
+  {
+    label: "Finance",
+    href: "/finance",
+    icon: IndianRupee,
   },
 ];
 
@@ -139,48 +141,58 @@ export function Sidebar() {
 
           if (item.disabled) {
             return (
-              <div
-                key={item.label}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 select-none cursor-default"
+              <Fragment key={item.label}>
+                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 select-none cursor-default">
+                  <Icon className="w-5 h-5 shrink-0 text-white/60" />
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 tracking-wider">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                {item.separatorAfter && (
+                  <div className="pt-2 pb-1.5 px-2">
+                    <div className="border-t border-white/10" />
+                  </div>
+                )}
+              </Fragment>
+            );
+          }
+
+          return (
+            <Fragment key={item.href}>
+              <Link
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-white text-[#083a60] shadow-sm font-semibold"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
+                )}
               >
-                <Icon className="w-5 h-5 shrink-0 text-white/60" />
+                <Icon
+                  className={cn(
+                    "w-5 h-5 shrink-0",
+                    isActive ? "text-[#083a60]" : "text-white/90"
+                  )}
+                />
                 <span>{item.label}</span>
+                {isActive && (
+                  <ChevronRight className="w-4 h-4 ml-auto text-[#083a60] shrink-0" />
+                )}
                 {item.badge && (
                   <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 tracking-wider">
                     {item.badge}
                   </span>
                 )}
-              </div>
-            );
-          }
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-white text-[#083a60] shadow-sm font-semibold"
-                  : "text-white/80 hover:text-white hover:bg-white/10"
+              </Link>
+              {item.separatorAfter && (
+                <div className="pt-2 pb-1.5 px-2">
+                  <div className="border-t border-white/10" />
+                </div>
               )}
-            >
-              <Icon
-                className={cn(
-                  "w-5 h-5 shrink-0",
-                  isActive ? "text-[#083a60]" : "text-white/90"
-                )}
-              />
-              <span>{item.label}</span>
-              {isActive && (
-                <ChevronRight className="w-4 h-4 ml-auto text-[#083a60] shrink-0" />
-              )}
-              {item.badge && (
-                <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 tracking-wider">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
+            </Fragment>
           );
         })}
       </nav>
