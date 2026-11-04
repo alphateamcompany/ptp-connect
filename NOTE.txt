@@ -34,3 +34,54 @@ On Return page: [DONE]
     - Remove return no
     - add Start date, Starting hours, Driver name, vehicle number.
     - Closing date, Closing hours, Driver name, vehicle number. 
+
+
+DATE:  Nov 3rd 2026
+
+On Generator 
+    - ERROR: Assert ID is coming same for all the generator/ make it editable but unqiue 
+    - ADD :  Buying person details and selling person details [name, mobile number]
+    - CHANGE : on Status change decommission to sales 
+    - ADD:  once the generator is changed to sales as default don't show that in the table.. but give a option to show "sales" generator in the status filter option
+    - ADD: arrange the generator table in the aercending order of the ID 
+    - ADD: Note 
+    (optional)
+    - Client asked can you show the maintenance log history of the each generator in the generator view model in the bottom 
+    - CHANGE:  from current location and current running hours to purchased location and purchased running hours 
+    - Don't show the purchased location in the table. instead get the current location from the rental orders show the live data in the table as current location 
+    - BUG:  on RO the generator assigned rental period is over but on the generator table the status isn't changed to avaiable instead showing on rental only even after the Rental period is ended. 
+
+
+On Customer 
+    - ADD: Primary person role 
+    - ADD : currently the "add another number" only showing the numbers but client want it as "Add another person" which shows name, role and number as inputs
+    - ADD : "Add another email" 
+    - ADD : Note 
+    - Show GST number in table 
+    - Show the "another person" detials on the table 
+
+ On Rental order 
+    - CHANGE: on new rental order change the "security deposit" to "advance payment"
+    - ADD: DC (delivery challan) number and "E way bill"
+    - ADD: if desiel included enabled show the input value called "Value" ast text  (200rs desiel or 20L deisel )
+    - ADD:  Note 
+    - CHANGE: currently the billing company is showing the customer company... but client said he needs to add his own company. bcoz he owns the 3 seperate company so when ever he enters the RO he have to select from which company he is billing this RO. Companies [PTPDS , PTPS, RG] 
+    - ADD:  Filter option to show his billing company in the RO table.  
+    - ADD:  start and close hours
+    - Remove: remove the inlcusion & total amount from the table 
+    - ADD: date filtering option 
+
+On Maintenance 
+    - CHANGE: Instead of shwoing only service types one clickedable make it as a checkbox to select multiple 
+    - CHANGE: cost to total cost 
+    - ADD: on add log maintenance : currently it showing only the Generator name but client said he is confused which generator is which so... he asked can you show the capacity value next to the generator name on the drop down so I can understand easily. 
+    - ADD: PDF link option in maintenance log. 
+    - REMOVE : the cards from the on maintenance screen 
+    - ADD: view option in the service history table for each service 
+
+
+Globle CHANGES
+ - Disable dashboard 
+ - check why navigating to new page takes too long time.. 
+ - move the site monitor table to top and bring the Transport to secondry in the side bar (which is under the seperator)
+ - 
