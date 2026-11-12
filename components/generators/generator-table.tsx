@@ -72,6 +72,21 @@ export function GeneratorTable({
             Maintenance
           </span>
         );
+      case "breakdown":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            Breakdown
+          </span>
+        );
+      case "sales":
+      case "sold":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+            Sales
+          </span>
+        );
       default:
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
@@ -125,7 +140,7 @@ export function GeneratorTable({
               <th className="py-3.5 px-4">Assert ID</th>
               <th className="py-3.5 px-4">Generator</th>
               <th className="py-3.5 px-4 hidden sm:table-cell">Capacity</th>
-              <th className="py-3.5 px-4 hidden sm:table-cell">Location</th>
+              <th className="py-3.5 px-4 hidden sm:table-cell">Current Location</th>
               <th className="py-3.5 px-4 hidden sm:table-cell">Purchased Year</th>
               <th className="py-3.5 px-4">Status</th>
               <th className="py-3.5 px-4 text-right">Actions</th>
@@ -180,17 +195,23 @@ export function GeneratorTable({
                   </span>
                 </td>
 
-                {/* Location */}
+                {/* Current Location (Live from Active Rental Orders / Yard) */}
                 <td className="py-4 px-4 hidden sm:table-cell">
-                  {gen.location ? (
+                  {gen.currentLocation ? (
                     <div className="flex items-center gap-1.5 text-slate-700 text-xs font-medium">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate max-w-[160px]">
-                        {gen.location}
+                      <MapPin
+                        className={`w-3.5 h-3.5 shrink-0 ${
+                          gen.status?.toLowerCase() === "on rent"
+                            ? "text-blue-500"
+                            : "text-slate-400"
+                        }`}
+                      />
+                      <span className="truncate max-w-[160px]" title={gen.currentLocation}>
+                        {gen.currentLocation}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-xs text-slate-400">-</span>
+                    <span className="text-xs text-slate-400">—</span>
                   )}
                 </td>
 

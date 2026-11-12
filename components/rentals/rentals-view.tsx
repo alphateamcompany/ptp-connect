@@ -12,6 +12,8 @@ import {
   Filter,
   Table as TableIcon,
   LayoutGrid,
+  Building2,
+  Calendar,
 } from "lucide-react";
 import { RentalOrder, Customer, Generator } from "@/lib/db/schema";
 import { RentalOrderCard } from "./rental-order-card";
@@ -27,6 +29,58 @@ import {
   deleteRentalOrder,
   CreateRentalOrderInput,
 } from "@/app/rentals/actions";
+
+function parseOrderDate(dateStr?: string | null): Date | null {
+  if (!dateStr || !dateStr.trim()) return null;
+  const s = dateStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  if (/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(s)) {
+    const parts = s.split(/[-/]/).map(Number);
+    return new Date(parts[2], parts[1] - 1, parts[0]);
+  }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function toYMD(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getDateRange(preset: string): { from: string; to: string } | null {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+
+  if (preset === "Today") {
+    const todayStr = `${y}-${String(m + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    return { from: todayStr, to: todayStr };
+  }
+  if (preset === "ThisMonth") {
+    const fromStr = `${y}-${String(m + 1).padStart(2, "0")}-01`;
+    const lastDay = new Date(y, m + 1, 0).getDate();
+    const toStr = `${y}-${String(m + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    return { from: fromStr, to: toStr };
+  }
+  if (preset === "LastMonth") {
+    const prevMonthDate = new Date(y, m - 1, 1);
+    const py = prevMonthDate.getFullYear();
+    const pm = prevMonthDate.getMonth();
+    const fromStr = `${py}-${String(pm + 1).padStart(2, "0")}-01`;
+    const lastDay = new Date(py, pm + 1, 0).getDate();
+    const toStr = `${py}-${String(pm + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    return { from: fromStr, to: toStr };
+  }
+  if (preset === "ThisYear") {
+    return { from: `${y}-01-01`, to: `${y}-12-31` };
+  }
+  return null;
+}
 
 interface RentalsViewProps {
   initialOrders: RentalOrder[];
@@ -68,8 +122,25 @@ export function RentalsView({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
+  const [billingCompanyFilter, setBillingCompanyFilter] = useState("All");
+  const [dateFilterPreset, setDateFilterPreset] = useState("All");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [dateFilterMode, setDateFilterMode] = useState<"active" | "start">("active");
   const [sortBy, setSortBy] = useState("order_asc");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
+
+  const billingCompanyOptions = useMemo(() => {
+    const list = ["PTPDS", "PTPS", "RG"];
+    const extra = new Set<string>();
+    orders.forEach((o) => {
+      const trimmed = o.billingCompany?.trim();
+      if (trimmed && !list.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
+        extra.add(trimmed);
+      }
+    });
+    return [...list, ...Array.from(extra)];
+  }, [orders]);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -140,6 +211,11 @@ export function RentalsView({
     setSearchQuery("");
     setStatusFilter("All");
     setTypeFilter("All");
+    setBillingCompanyFilter("All");
+    setDateFilterPreset("All");
+    setCustomStartDate("");
+    setCustomEndDate("");
+    setDateFilterMode("active");
     setSortBy("order_asc");
   };
 
@@ -147,6 +223,10 @@ export function RentalsView({
     searchQuery.trim() !== "" ||
     statusFilter !== "All" ||
     typeFilter !== "All" ||
+    billingCompanyFilter !== "All" ||
+    dateFilterPreset !== "All" ||
+    customStartDate !== "" ||
+    customEndDate !== "" ||
     sortBy !== "order_asc";
 
   // Filtered and Sorted Orders
@@ -168,21 +248,65 @@ export function RentalsView({
       );
     }
 
-    // 2. Status Filter
+    // 2. Billing Company Filter
+    if (billingCompanyFilter !== "All") {
+      result = result.filter(
+        (o) => o.billingCompany?.toLowerCase() === billingCompanyFilter.toLowerCase()
+      );
+    }
+
+    // 3. Status Filter
     if (statusFilter !== "All") {
       result = result.filter(
         (o) => o.status.toLowerCase() === statusFilter.toLowerCase()
       );
     }
 
-    // 3. Rental Type Filter
+    // 4. Rental Type Filter
     if (typeFilter !== "All") {
       result = result.filter(
         (o) => o.rentalType?.toLowerCase() === typeFilter.toLowerCase()
       );
     }
 
-    // 4. Sorting
+    // 5. Date Filter
+    if (dateFilterPreset !== "All" || customStartDate || customEndDate) {
+      let fromStr = customStartDate;
+      let toStr = customEndDate;
+
+      if (dateFilterPreset !== "Custom" && dateFilterPreset !== "All") {
+        const range = getDateRange(dateFilterPreset);
+        if (range) {
+          fromStr = range.from;
+          toStr = range.to;
+        }
+      }
+
+      if (fromStr || toStr) {
+        result = result.filter((o) => {
+          const startDateParsed = parseOrderDate(o.startDate);
+          const endDateParsed = parseOrderDate(o.endDate);
+
+          const startYMD = startDateParsed ? toYMD(startDateParsed) : o.startDate?.trim();
+          const endYMD = endDateParsed ? toYMD(endDateParsed) : (o.endDate?.trim() || startYMD);
+
+          if (!startYMD) return false;
+
+          if (dateFilterMode === "start") {
+            if (fromStr && startYMD < fromStr) return false;
+            if (toStr && startYMD > toStr) return false;
+            return true;
+          } else {
+            // "active" in range:
+            if (fromStr && endYMD && endYMD < fromStr) return false;
+            if (toStr && startYMD > toStr) return false;
+            return true;
+          }
+        });
+      }
+    }
+
+    // 6. Sorting
     result.sort((a, b) => {
       if (sortBy === "order_asc") {
         return a.orderNumber.localeCompare(b.orderNumber, undefined, { numeric: true });
@@ -206,7 +330,18 @@ export function RentalsView({
     });
 
     return result;
-  }, [orders, searchQuery, statusFilter, typeFilter, sortBy]);
+  }, [
+    orders,
+    searchQuery,
+    statusFilter,
+    typeFilter,
+    billingCompanyFilter,
+    dateFilterPreset,
+    customStartDate,
+    customEndDate,
+    dateFilterMode,
+    sortBy,
+  ]);
 
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto space-y-6">
@@ -269,9 +404,9 @@ export function RentalsView({
         </button>
       </div>
 
-      {/* MOBILE Row 2: Status + Type + Sort filters */}
-      <div className="flex items-center gap-2 sm:hidden">
-        <div className="relative flex-1">
+      {/* MOBILE Row 2: Status + Type + Billing + Date filters */}
+      <div className="grid grid-cols-2 gap-2 sm:hidden">
+        <div className="relative">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -283,7 +418,7 @@ export function RentalsView({
           </select>
           <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
-        <div className="relative flex-1">
+        <div className="relative">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -296,12 +431,48 @@ export function RentalsView({
           </select>
           <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
+        <div className="relative">
+          <select
+            value={billingCompanyFilter}
+            onChange={(e) => setBillingCompanyFilter(e.target.value)}
+            className="w-full appearance-none px-3 py-2.5 pr-8 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Companies</option>
+            {billingCompanyOptions.map((comp) => (
+              <option key={comp} value={comp}>
+                {comp}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="relative">
+          <select
+            value={dateFilterPreset}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDateFilterPreset(val);
+              if (val !== "Custom") {
+                setCustomStartDate("");
+                setCustomEndDate("");
+              }
+            }}
+            className="w-full appearance-none px-3 py-2.5 pr-8 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Dates</option>
+            <option value="ThisMonth">This Month</option>
+            <option value="LastMonth">Last Month</option>
+            <option value="ThisYear">This Year</option>
+            <option value="Custom">Custom Range</option>
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
         {hasActiveFilters && (
           <button
             onClick={handleResetFilters}
-            className="px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer shrink-0"
+            className="col-span-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium transition-colors cursor-pointer text-center"
           >
-            Reset
+            Reset Filters
           </button>
         )}
       </div>
@@ -351,6 +522,43 @@ export function RentalsView({
             <option value="Weekly">Weekly</option>
             <option value="Monthly">Monthly</option>
           </select>
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="relative shrink-0 min-w-[140px]">
+          <select
+            value={billingCompanyFilter}
+            onChange={(e) => setBillingCompanyFilter(e.target.value)}
+            className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Companies</option>
+            {billingCompanyOptions.map((comp) => (
+              <option key={comp} value={comp}>
+                {comp}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="relative shrink-0 min-w-[145px]">
+          <select
+            value={dateFilterPreset}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDateFilterPreset(val);
+              if (val !== "Custom") {
+                setCustomStartDate("");
+                setCustomEndDate("");
+              }
+            }}
+            className="w-full appearance-none pl-9 pr-9 py-2.5 rounded-xl border border-slate-200/90 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
+          >
+            <option value="All">All Dates</option>
+            <option value="ThisMonth">This Month</option>
+            <option value="LastMonth">Last Month</option>
+            <option value="ThisYear">This Year</option>
+            <option value="Custom">Custom Range</option>
+          </select>
+          <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
         <div className="relative shrink-0 min-w-[180px]">
@@ -411,11 +619,187 @@ export function RentalsView({
         )}
       </div>
 
+      {/* Quick Billing Company Filter Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+        <span className="text-slate-500 font-semibold text-xs flex items-center gap-1.5 shrink-0 mr-1">
+          <Building2 className="w-3.5 h-3.5 text-slate-400" />
+          <span>Billing Company:</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => setBillingCompanyFilter("All")}
+          className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shrink-0 border ${
+            billingCompanyFilter === "All"
+              ? "bg-[#083a60] text-white border-[#083a60] shadow-xs"
+              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          All ({orders.length})
+        </button>
+        {billingCompanyOptions.map((comp) => {
+          const count = orders.filter((o) => o.billingCompany?.toLowerCase() === comp.toLowerCase()).length;
+          return (
+            <button
+              key={comp}
+              type="button"
+              onClick={() => setBillingCompanyFilter(comp)}
+              className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shrink-0 border ${
+                billingCompanyFilter.toLowerCase() === comp.toLowerCase()
+                  ? "bg-[#083a60] text-white border-[#083a60] shadow-xs"
+                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              {comp} {count > 0 && <span className="opacity-75 font-normal">({count})</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Quick Date Filter Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+        <span className="text-slate-500 font-semibold text-xs flex items-center gap-1.5 shrink-0 mr-1">
+          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+          <span>Date Filter:</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setDateFilterPreset("All");
+            setCustomStartDate("");
+            setCustomEndDate("");
+          }}
+          className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shrink-0 border ${
+            dateFilterPreset === "All" && !customStartDate && !customEndDate
+              ? "bg-[#083a60] text-white border-[#083a60] shadow-xs"
+              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          All Dates
+        </button>
+        <button
+          type="button"
+          onClick={() => setDateFilterPreset("ThisMonth")}
+          className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shrink-0 border ${
+            dateFilterPreset === "ThisMonth"
+              ? "bg-[#083a60] text-white border-[#083a60] shadow-xs"
+              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          This Month
+        </button>
+        <button
+          type="button"
+          onClick={() => setDateFilterPreset("LastMonth")}
+          className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shrink-0 border ${
+            dateFilterPreset === "LastMonth"
+              ? "bg-[#083a60] text-white border-[#083a60] shadow-xs"
+              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          Last Month
+        </button>
+        <button
+          type="button"
+          onClick={() => setDateFilterPreset("ThisYear")}
+          className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shrink-0 border ${
+            dateFilterPreset === "ThisYear"
+              ? "bg-[#083a60] text-white border-[#083a60] shadow-xs"
+              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          This Year
+        </button>
+        <button
+          type="button"
+          onClick={() => setDateFilterPreset("Custom")}
+          className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer shrink-0 border ${
+            dateFilterPreset === "Custom" || customStartDate || customEndDate
+              ? "bg-[#083a60] text-white border-[#083a60] shadow-xs"
+              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          Custom Range...
+        </button>
+      </div>
+
+      {/* Custom Date Range Picker bar (shows when Custom is active) */}
+      {(dateFilterPreset === "Custom" || customStartDate || customEndDate) && (
+        <div className="flex flex-wrap items-center gap-3 p-3 bg-slate-50/90 rounded-xl border border-slate-200 text-xs shadow-2xs">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-700">From:</span>
+            <input
+              type="date"
+              value={customStartDate}
+              onChange={(e) => {
+                setCustomStartDate(e.target.value);
+                setDateFilterPreset("Custom");
+              }}
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:ring-2 focus:ring-[#083a60] focus:outline-none cursor-pointer"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-700">To:</span>
+            <input
+              type="date"
+              value={customEndDate}
+              onChange={(e) => {
+                setCustomEndDate(e.target.value);
+                setDateFilterPreset("Custom");
+              }}
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:ring-2 focus:ring-[#083a60] focus:outline-none cursor-pointer"
+            />
+          </div>
+          <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <span className="text-slate-500 font-medium">Match:</span>
+            <select
+              value={dateFilterMode}
+              onChange={(e) => setDateFilterMode(e.target.value as "active" | "start")}
+              className="px-2 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs focus:ring-2 focus:ring-[#083a60] focus:outline-none cursor-pointer font-semibold"
+            >
+              <option value="active">Active in Period</option>
+              <option value="start">Order Start Date</option>
+            </select>
+          </div>
+          {(customStartDate || customEndDate) && (
+            <button
+              type="button"
+              onClick={() => {
+                setCustomStartDate("");
+                setCustomEndDate("");
+                setDateFilterPreset("All");
+              }}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors ml-auto cursor-pointer"
+              title="Clear custom date filter"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Clear Dates</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Sub-bar: Results summary and Mobile view switcher */}
       <div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
-        <span>
-          Showing {filteredAndSortedOrders.length} of {orders.length} orders
-        </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span>
+            Showing <strong className="text-slate-700">{filteredAndSortedOrders.length}</strong> of{" "}
+            <strong className="text-slate-700">{orders.length}</strong> orders
+          </span>
+          {dateFilterPreset !== "All" && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-[#083a60] border border-blue-100 font-semibold text-[11px]">
+              <Calendar className="w-3 h-3 text-[#083a60]" />
+              {dateFilterPreset === "Custom"
+                ? `${customStartDate || "Start"} to ${customEndDate || "End"}`
+                : dateFilterPreset === "ThisMonth"
+                ? "This Month"
+                : dateFilterPreset === "LastMonth"
+                ? "Last Month"
+                : dateFilterPreset === "ThisYear"
+                ? "This Year"
+                : dateFilterPreset}
+            </span>
+          )}
+        </div>
 
         {/* Mobile View Toggle */}
         <div className="flex sm:hidden items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200/80">

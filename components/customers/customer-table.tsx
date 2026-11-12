@@ -50,10 +50,16 @@ export function CustomerTable({
                 COMPANY
               </th>
               <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+                GST NUMBER
+              </th>
+              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
                 CONTACT PERSON
               </th>
               <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
                 CONTACT PHONE NUMBER
+              </th>
+              <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+                ADDITIONAL PERSONS
               </th>
               <th className="py-4 px-6 text-[11px] font-bold tracking-wider text-slate-600 uppercase text-right">
                 ACTIONS
@@ -92,37 +98,80 @@ export function CustomerTable({
                     </div>
                   </td>
 
+                  {/* GST NUMBER Column */}
+                  <td className="py-4 px-6">
+                    {customer.gstNumber ? (
+                      <span className="text-xs font-semibold text-slate-800 font-mono tracking-wide bg-slate-100/90 px-2.5 py-1 rounded-md border border-slate-200/70 inline-block whitespace-nowrap">
+                        {customer.gstNumber}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-slate-400">—</span>
+                    )}
+                  </td>
+
                   {/* CONTACT PERSON Column */}
                   <td className="py-4 px-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-slate-800">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-semibold text-slate-800">
                         {customer.contactPerson || "—"}
                       </span>
+                      {customer.primaryPersonRole && (
+                        <span className="text-xs text-slate-500 truncate mt-0.5">
+                          {customer.primaryPersonRole}
+                        </span>
+                      )}
                     </div>
                   </td>
 
                   {/* CONTACT PHONE NUMBER Column */}
                   <td className="py-4 px-6">
-                    {phoneList.length === 0 ? (
+                    {customer.phone ? (
+                      <a
+                        href={`tel:${customer.phone}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs sm:text-sm font-medium text-slate-700 hover:text-[#083a60] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"
+                        title={`Call ${customer.phone}`}
+                      >
+                        <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{customer.phone}</span>
+                      </a>
+                    ) : (
+                      <span className="text-sm text-slate-400">—</span>
+                    )}
+                  </td>
+
+                  {/* ADDITIONAL PERSONS Column (Another Person Details) */}
+                  <td className="py-4 px-6">
+                    {!customer.additionalPersons ||
+                    !Array.isArray(customer.additionalPersons) ||
+                    customer.additionalPersons.length === 0 ? (
                       <span className="text-sm text-slate-400">—</span>
                     ) : (
-                      <div className="flex flex-col gap-1.5 items-start">
-                        {phoneList.map((phone, idx) => (
-                          <a
-                            key={idx}
-                            href={`tel:${phone}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-xs sm:text-sm font-medium text-slate-700 hover:text-[#083a60] inline-flex items-center gap-1.5 transition-colors"
-                            title={`Call ${phone}`}
-                          >
-                            <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span>{phone}</span>
-                            {idx === 0 && phoneList.length > 1 && (
-                              <span className="text-[10px] font-semibold text-[#083a60] bg-blue-50 border border-blue-100 px-1 rounded">
-                                Main
+                      <div className="flex flex-col gap-2 min-w-[170px]">
+                        {customer.additionalPersons.map((p, pIdx) => (
+                          <div key={pIdx} className="flex flex-col text-xs min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-slate-800">
+                                {p.name || `Person #${pIdx + 2}`}
                               </span>
+                              {p.role && (
+                                <span className="text-[10px] font-medium text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.2 rounded">
+                                  {p.role}
+                                </span>
+                              )}
+                            </div>
+                            {p.phone && (
+                              <a
+                                href={`tel:${p.phone}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-xs text-slate-600 hover:text-[#083a60] inline-flex items-center gap-1 mt-0.5 transition-colors font-medium"
+                                title={`Call ${p.name || "Contact"}: ${p.phone}`}
+                              >
+                                <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span>{p.phone}</span>
+                              </a>
                             )}
-                          </a>
+                          </div>
                         ))}
                       </div>
                     )}

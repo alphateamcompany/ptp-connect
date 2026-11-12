@@ -26,16 +26,22 @@ export interface CreateRentalOrderInput {
   generatorId?: number | null;
   generatorName: string;
   generatorKva?: string;
+  dcNumber?: string;
+  ewayBill?: string;
   startDate: string;
   endDate: string;
+  startHours?: number | string;
+  closeHours?: number | string;
   rentalType: string;
   dailyRate: number | string;
   transportCharges?: number | string;
   securityDeposit?: number | string;
   dieselIncluded?: boolean;
+  dieselValue?: string;
   operatorIncluded?: boolean;
   gstRate?: number | string;
   status?: string;
+  notes?: string;
 }
 
 import { calculateRentalTotals, RentalTotals } from "@/lib/rentals-calc";
@@ -95,8 +101,12 @@ export async function checkOrderNumberAvailable(
 
 export async function getRentalOrders(search?: string) {
   try {
-    // Keep generator statuses automatically synced with active rental orders
-    await syncGeneratorStatusesWithRentals();
+    // Automatically complete overdue active orders and sync generator statuses
+    try {
+      await syncGeneratorStatusesWithRentals();
+    } catch (syncErr) {
+      console.error("Non-fatal sync error before getRentalOrders:", syncErr);
+    }
 
     let query = db.select().from(rentalOrders);
 
@@ -111,6 +121,8 @@ export async function getRentalOrders(search?: string) {
           ilike(rentalOrders.siteLocation, q),
           ilike(rentalOrders.generatorName, q),
           ilike(rentalOrders.generatorKva, q),
+          ilike(rentalOrders.dcNumber, q),
+          ilike(rentalOrders.ewayBill, q),
           ilike(rentalOrders.status, q),
           ilike(rentalOrders.rentalType, q)
         )
@@ -225,19 +237,25 @@ export async function createRentalOrder(data: CreateRentalOrderInput) {
         generatorId: resolvedGeneratorId,
         generatorName: data.generatorName.trim(),
         generatorKva: generatorKva || null,
+        dcNumber: data.dcNumber?.trim() || null,
+        ewayBill: data.ewayBill?.trim() || null,
         startDate: data.startDate.trim(),
         endDate: data.endDate.trim(),
+        startHours: data.startHours !== undefined && data.startHours !== "" ? String(data.startHours) : null,
+        closeHours: data.closeHours !== undefined && data.closeHours !== "" ? String(data.closeHours) : null,
         rentalType: data.rentalType?.trim() || "Monthly",
         dailyRate: String(totals.dailyRate),
         transportCharges: String(totals.transportCharges),
         securityDeposit: data.securityDeposit !== undefined ? String(data.securityDeposit) : "0",
         dieselIncluded: Boolean(data.dieselIncluded),
+        dieselValue: data.dieselIncluded ? data.dieselValue?.trim() || null : null,
         operatorIncluded: Boolean(data.operatorIncluded),
         rentalCharge: String(totals.rentalCharge),
         gstRate: String(totals.gstRate),
         gstAmount: String(totals.gstAmount),
         totalAmount: String(totals.totalAmount),
         status,
+        notes: data.notes?.trim() || null,
       })
       .returning();
 
@@ -366,15 +384,32 @@ export async function updateRentalOrder(
         console.error("Could not fetch generator capacity on update:", e);
       }
     }
+    if (data.dcNumber !== undefined) updateValues.dcNumber = data.dcNumber?.trim() || null;
+    if (data.ewayBill !== undefined) updateValues.ewayBill = data.ewayBill?.trim() || null;
     if (data.startDate !== undefined) updateValues.startDate = data.startDate.trim();
     if (data.endDate !== undefined) updateValues.endDate = data.endDate.trim();
+    if (data.startHours !== undefined) {
+      updateValues.startHours = data.startHours !== "" ? String(data.startHours) : null;
+    }
+    if (data.closeHours !== undefined) {
+      updateValues.closeHours = data.closeHours !== "" ? String(data.closeHours) : null;
+    }
     if (data.rentalType !== undefined) updateValues.rentalType = data.rentalType.trim();
     if (data.dailyRate !== undefined) updateValues.dailyRate = String(totals.dailyRate);
     if (data.transportCharges !== undefined) updateValues.transportCharges = String(totals.transportCharges);
     if (data.securityDeposit !== undefined) updateValues.securityDeposit = String(data.securityDeposit);
-    if (data.dieselIncluded !== undefined) updateValues.dieselIncluded = Boolean(data.dieselIncluded);
+    if (data.dieselIncluded !== undefined) {
+      updateValues.dieselIncluded = Boolean(data.dieselIncluded);
+      if (!data.dieselIncluded) {
+        updateValues.dieselValue = null;
+      }
+    }
+    if (data.dieselValue !== undefined) {
+      updateValues.dieselValue = data.dieselValue?.trim() || null;
+    }
     if (data.operatorIncluded !== undefined) updateValues.operatorIncluded = Boolean(data.operatorIncluded);
     if (data.status !== undefined) updateValues.status = data.status.trim();
+    if (data.notes !== undefined) updateValues.notes = data.notes?.trim() || null;
 
     updateValues.rentalCharge = String(totals.rentalCharge);
     updateValues.gstRate = String(totals.gstRate);
@@ -458,9 +493,6 @@ export async function deleteRentalOrder(id: number) {
 
 export async function getFormDataOptions() {
   try {
-    // Keep generator statuses fresh before displaying in selection dropdowns
-    await syncGeneratorStatusesWithRentals();
-
     const [customerList, generatorList] = await Promise.all([
       db.select().from(customers).orderBy(customers.companyName),
       db.select().from(generators).orderBy(generators.name),

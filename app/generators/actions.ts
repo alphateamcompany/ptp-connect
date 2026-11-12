@@ -2,9 +2,13 @@
 
 import { db } from "@/lib/db";
 import { generators } from "@/lib/db/schema";
-import { desc, ilike, or, eq, and } from "drizzle-orm";
+import { desc, asc, ilike, or, eq, and, sql, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { syncGeneratorStatusesWithRentals } from "@/lib/sync-generators";
+import {
+  syncGeneratorStatusesWithRentals,
+  getLiveLocationsByGenerator,
+  attachLiveLocationToGenerator,
+} from "@/lib/sync-generators";
 
 export interface CreateGeneratorInput {
   generatorId: string;
@@ -27,13 +31,15 @@ export interface CreateGeneratorInput {
   location?: string;
   driveLink?: string;
   status: string;
+  buyingPersonName?: string;
+  buyingPersonPhone?: string;
+  sellingPersonName?: string;
+  sellingPersonPhone?: string;
+  notes?: string;
 }
 
 export async function getGenerators(search?: string, status?: string) {
   try {
-    // Keep generator statuses in sync with active rental orders
-    await syncGeneratorStatusesWithRentals();
-
     const conditions = [];
 
     if (search && search.trim() !== "") {
@@ -47,7 +53,12 @@ export async function getGenerators(search?: string, status?: string) {
           ilike(generators.model, q),
           ilike(generators.location, q),
           ilike(generators.engineMake, q),
-          ilike(generators.alternatorMake, q)
+          ilike(generators.alternatorMake, q),
+          ilike(generators.buyingPersonName, q),
+          ilike(generators.buyingPersonPhone, q),
+          ilike(generators.sellingPersonName, q),
+          ilike(generators.sellingPersonPhone, q),
+          ilike(generators.notes, q)
         )
       );
     }
@@ -65,8 +76,10 @@ export async function getGenerators(search?: string, status?: string) {
       query = query.where(and(...conditions));
     }
 
-    const items = await query.orderBy(desc(generators.createdAt), desc(generators.id));
-    return { success: true, data: items };
+    const liveMap = await getLiveLocationsByGenerator();
+    const items = await query.orderBy(asc(generators.generatorId), asc(generators.id));
+    const dataWithLocations = items.map((g) => attachLiveLocationToGenerator(g, liveMap));
+    return { success: true, data: dataWithLocations };
   } catch (error) {
     console.error("Failed to fetch generators:", error);
     return { success: false, error: (error as Error).message, data: [] };
@@ -88,11 +101,26 @@ export async function createGenerator(data: CreateGeneratorInput) {
       return { success: false, error: "Valid capacity (kVA) is required" };
     }
 
+    const trimmedAssetId = data.assetId?.trim() || null;
+    if (trimmedAssetId) {
+      const duplicates = await db
+        .select({ id: generators.id, generatorId: generators.generatorId, name: generators.name })
+        .from(generators)
+        .where(sql`lower(trim(${generators.assetId})) = lower(trim(${trimmedAssetId}))`);
+
+      if (duplicates.length > 0) {
+        return {
+          success: false,
+          error: `Assert ID "${trimmedAssetId}" is already assigned to generator ${duplicates[0].generatorId} (${duplicates[0].name}). Please use a unique Assert ID.`,
+        };
+      }
+    }
+
     const newGen = await db
       .insert(generators)
       .values({
         generatorId: data.generatorId.trim(),
-        assetId: data.assetId?.trim() || null,
+        assetId: trimmedAssetId,
         name: data.name.trim(),
         brand: data.brand?.trim() || data.name.trim() || null,
         model: data.model.trim(),
@@ -111,13 +139,20 @@ export async function createGenerator(data: CreateGeneratorInput) {
         location: data.location?.trim() || null,
         driveLink: data.driveLink?.trim() || null,
         status: data.status?.trim() || "Available",
+        buyingPersonName: data.buyingPersonName?.trim() || null,
+        buyingPersonPhone: data.buyingPersonPhone?.trim() || null,
+        sellingPersonName: data.sellingPersonName?.trim() || null,
+        sellingPersonPhone: data.sellingPersonPhone?.trim() || null,
+        notes: data.notes?.trim() || null,
       })
       .returning();
 
     revalidatePath("/generators");
     revalidatePath("/");
 
-    return { success: true, data: newGen[0] };
+    const liveMap = await getLiveLocationsByGenerator();
+    const withLocation = attachLiveLocationToGenerator(newGen[0], liveMap);
+    return { success: true, data: withLocation };
   } catch (error) {
     console.error("Failed to create generator:", error);
     const msg = (error as Error).message;
@@ -125,6 +160,12 @@ export async function createGenerator(data: CreateGeneratorInput) {
       return {
         success: false,
         error: `Generator ID "${data.generatorId}" is already in use. Please use a unique ID.`,
+      };
+    }
+    if (msg.includes("asset_id")) {
+      return {
+        success: false,
+        error: `Assert ID is already in use. Please use a unique Assert ID.`,
       };
     }
     return { success: false, error: msg };
@@ -151,15 +192,52 @@ export async function updateGenerator(
     const updateValues: Record<string, unknown> = {
       updatedAt: new Date(),
     };
-    if (data.generatorId !== undefined) updateValues.generatorId = data.generatorId.trim();
-    if (data.assetId !== undefined && data.assetId.trim()) {
-      // Assert ID is fixed once entered and cannot be changed later
-      const [current] = await db
-        .select({ assetId: generators.assetId })
+    if (data.generatorId !== undefined) {
+      const trimmedGenId = data.generatorId.trim();
+      if (!trimmedGenId) {
+        return { success: false, error: "Generator ID cannot be empty" };
+      }
+      const duplicateGenId = await db
+        .select({ id: generators.id, generatorId: generators.generatorId })
         .from(generators)
-        .where(eq(generators.id, id));
-      if (current && !current.assetId) {
-        updateValues.assetId = data.assetId.trim();
+        .where(
+          and(
+            sql`lower(trim(${generators.generatorId})) = lower(trim(${trimmedGenId}))`,
+            ne(generators.id, id)
+          )
+        );
+      if (duplicateGenId.length > 0) {
+        return {
+          success: false,
+          error: `Generator ID "${trimmedGenId}" is already in use. Please use a unique ID.`,
+        };
+      }
+      updateValues.generatorId = trimmedGenId;
+    }
+
+    if (data.assetId !== undefined) {
+      const trimmedAssetId = data.assetId.trim() || null;
+      if (trimmedAssetId) {
+        // Enforce uniqueness across other generators
+        const duplicates = await db
+          .select({ id: generators.id, generatorId: generators.generatorId, name: generators.name })
+          .from(generators)
+          .where(
+            and(
+              sql`lower(trim(${generators.assetId})) = lower(trim(${trimmedAssetId}))`,
+              ne(generators.id, id)
+            )
+          );
+
+        if (duplicates.length > 0) {
+          return {
+            success: false,
+            error: `Assert ID "${trimmedAssetId}" is already assigned to generator ${duplicates[0].generatorId} (${duplicates[0].name}). Please use a unique Assert ID.`,
+          };
+        }
+        updateValues.assetId = trimmedAssetId;
+      } else {
+        updateValues.assetId = null;
       }
     }
     if (data.name !== undefined) {
@@ -187,6 +265,21 @@ export async function updateGenerator(
     if (data.location !== undefined) updateValues.location = data.location.trim() || null;
     if (data.driveLink !== undefined) updateValues.driveLink = data.driveLink.trim() || null;
     if (data.status !== undefined) updateValues.status = data.status.trim() || "Available";
+    if (data.buyingPersonName !== undefined) {
+      updateValues.buyingPersonName = data.buyingPersonName.trim() || null;
+    }
+    if (data.buyingPersonPhone !== undefined) {
+      updateValues.buyingPersonPhone = data.buyingPersonPhone.trim() || null;
+    }
+    if (data.sellingPersonName !== undefined) {
+      updateValues.sellingPersonName = data.sellingPersonName.trim() || null;
+    }
+    if (data.sellingPersonPhone !== undefined) {
+      updateValues.sellingPersonPhone = data.sellingPersonPhone.trim() || null;
+    }
+    if (data.notes !== undefined) {
+      updateValues.notes = data.notes.trim() || null;
+    }
 
     const updated = await db
       .update(generators)
@@ -197,7 +290,9 @@ export async function updateGenerator(
     revalidatePath("/generators");
     revalidatePath("/");
 
-    return { success: true, data: updated[0] };
+    const liveMap = await getLiveLocationsByGenerator();
+    const withLocation = attachLiveLocationToGenerator(updated[0], liveMap);
+    return { success: true, data: withLocation };
   } catch (error) {
     console.error("Failed to update generator:", error);
     const msg = (error as Error).message;
@@ -205,6 +300,12 @@ export async function updateGenerator(
       return {
         success: false,
         error: `Generator ID "${data.generatorId}" is already in use. Please use a unique ID.`,
+      };
+    }
+    if (msg.includes("asset_id")) {
+      return {
+        success: false,
+        error: `Assert ID is already in use. Please use a unique Assert ID.`,
       };
     }
     return { success: false, error: msg };

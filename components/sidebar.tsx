@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutGrid,
   Cpu,
   Users,
   FileText,
@@ -17,6 +16,7 @@ import {
   Menu,
   X,
   IndianRupee,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, Fragment } from "react";
@@ -27,15 +27,11 @@ interface NavItem {
   icon: React.ElementType;
   badge?: string;
   disabled?: boolean;
+  locked?: boolean;
   separatorAfter?: boolean;
 }
 
 const navItems: NavItem[] = [
-  {
-    label: "Dashboard",
-    href: "/",
-    icon: LayoutGrid,
-  },
   {
     label: "Generators",
     href: "/generators",
@@ -52,30 +48,38 @@ const navItems: NavItem[] = [
     icon: FileText,
   },
   {
-    label: "Transport",
-    href: "/transport",
-    icon: Truck,
-    separatorAfter: true,
-  },
-  {
     label: "Site Monitoring",
     href: "/monitoring",
     icon: MapPin,
+    separatorAfter: true,
+  },
+  {
+    label: "Transport",
+    href: "/transport",
+    icon: Truck,
+    disabled: true,
+    locked: true,
   },
   {
     label: "Maintenance",
     href: "/maintenance",
     icon: Wrench,
+    disabled: true,
+    locked: true,
   },
   {
     label: "Inventory",
     href: "/inventory",
     icon: Package,
+    disabled: true,
+    locked: true,
   },
   {
     label: "Finance",
     href: "/finance",
     icon: IndianRupee,
+    disabled: true,
+    locked: true,
   },
 ];
 
@@ -142,9 +146,15 @@ export function Sidebar() {
           if (item.disabled) {
             return (
               <Fragment key={item.label}>
-                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 select-none cursor-default">
-                  <Icon className="w-5 h-5 shrink-0 text-white/60" />
-                  <span>{item.label}</span>
+                <div
+                  className="group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white/30 transition-colors select-none cursor-not-allowed"
+                  title={item.locked ? "Locked" : item.badge || "Disabled"}
+                >
+                  <Icon className="w-5 h-5 shrink-0 text-white/50 group-hover:text-white/30 transition-colors" />
+                  <span className="transition-colors">{item.label}</span>
+                  {item.locked && (
+                    <Lock className="w-4 h-4 ml-auto text-white/40 group-hover:text-white/25 shrink-0 transition-colors" />
+                  )}
                   {item.badge && (
                     <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 tracking-wider">
                       {item.badge}
@@ -164,6 +174,7 @@ export function Sidebar() {
             <Fragment key={item.href}>
               <Link
                 href={item.href}
+                prefetch={true}
                 className={cn(
                   "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
                   isActive

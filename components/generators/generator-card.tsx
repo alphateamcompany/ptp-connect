@@ -40,6 +40,13 @@ export function GeneratorCard({ generator, onClick }: GeneratorCardProps) {
         </span>
       );
     }
+    if (s === "sales" || s === "sold") {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200/80">
+          Sales
+        </span>
+      );
+    }
     return (
       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
         {status}
@@ -100,7 +107,7 @@ export function GeneratorCard({ generator, onClick }: GeneratorCardProps) {
             </span>
           </div>
           <div>
-            <span className="text-slate-500">Hours: </span>
+            <span className="text-slate-500">Purchased Hours: </span>
             <span className="font-bold text-slate-800">
               {(generator.currentHours ?? 0)}h
             </span>
@@ -109,9 +116,9 @@ export function GeneratorCard({ generator, onClick }: GeneratorCardProps) {
 
         <div className="flex items-center justify-between text-xs pt-0.5">
           <div className="truncate">
-            <span className="text-slate-500">Location: </span>
+            <span className="text-slate-500">Current Location: </span>
             <span className="font-bold text-slate-800">
-              {generator.location || "Not assigned"}
+              {generator.currentLocation || (generator.status?.toLowerCase() === "sales" ? "—" : "Main Yard")}
             </span>
           </div>
           {generator.driveLink && (

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Loader2, Plus, Trash2 } from "lucide-react";
 import { CreateCustomerInput } from "@/app/customers/actions";
+import { AdditionalPerson } from "@/lib/db/schema";
 
 interface AddCustomerModalProps {
   isOpen: boolean;
@@ -22,14 +23,18 @@ export function AddCustomerModal({
     companyName: "",
     gstNumber: "",
     contactPerson: "",
+    primaryPersonRole: "",
+    phone: "",
     email: "",
     paymentTerms: "Cash",
     outstandingAmount: "0",
     billingAddress: "",
     siteAddress: "",
+    notes: "",
   });
 
-  const [phoneNumbers, setPhoneNumbers] = useState<string[]>([""]);
+  const [additionalPersons, setAdditionalPersons] = useState<AdditionalPerson[]>([]);
+  const [emails, setEmails] = useState<string[]>([""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,20 +62,40 @@ export function AddCustomerModal({
     }));
   };
 
-  const handlePhoneChange = (index: number, val: string) => {
-    setPhoneNumbers((prev) => {
+  const handleAddPerson = () => {
+    setAdditionalPersons((prev) => [...prev, { name: "", role: "", phone: "" }]);
+  };
+
+  const handlePersonChange = (
+    index: number,
+    field: keyof AdditionalPerson,
+    val: string
+  ) => {
+    setAdditionalPersons((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: val };
+      return next;
+    });
+  };
+
+  const handleRemovePerson = (index: number) => {
+    setAdditionalPersons((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleAddEmail = () => {
+    setEmails((prev) => [...prev, ""]);
+  };
+
+  const handleEmailChange = (index: number, val: string) => {
+    setEmails((prev) => {
       const next = [...prev];
       next[index] = val;
       return next;
     });
   };
 
-  const handleAddPhone = () => {
-    setPhoneNumbers((prev) => [...prev, ""]);
-  };
-
-  const handleRemovePhone = (index: number) => {
-    setPhoneNumbers((prev) => prev.filter((_, idx) => idx !== index));
+  const handleRemoveEmail = (index: number) => {
+    setEmails((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,14 +109,25 @@ export function AddCustomerModal({
 
     setLoading(true);
     try {
-      const combinedPhone = phoneNumbers
-        .map((p) => p.trim())
+      const cleanPersons = additionalPersons
+        .map((p) => ({
+          name: p.name?.trim() || "",
+          role: p.role?.trim() || undefined,
+          phone: p.phone?.trim() || undefined,
+        }))
+        .filter((p) => p.name || p.phone || p.role);
+
+      const combinedEmail = emails
+        .map((e) => e.trim())
         .filter(Boolean)
         .join(", ");
 
       const res = await onSubmit({
         ...formData,
-        phone: combinedPhone || undefined,
+        phone: formData.phone?.trim() || undefined,
+        email: combinedEmail || undefined,
+        primaryPersonRole: formData.primaryPersonRole?.trim() || undefined,
+        additionalPersons: cleanPersons,
         customerName: formData.customerName.trim() || formData.companyName.trim(),
         companyName: formData.companyName.trim() || formData.customerName.trim(),
       });
@@ -178,21 +214,7 @@ export function AddCustomerModal({
               />
             </div>
 
-            {/* Row 2: GST Number & Contact Person */}
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                GST Number
-              </label>
-              <input
-                type="text"
-                name="gstNumber"
-                value={formData.gstNumber || ""}
-                onChange={handleChange}
-                placeholder="e.g. 27ABCDE1234F1Z5"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all uppercase"
-              />
-            </div>
-
+            {/* Row 2: Contact Person & Primary Person Role */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Contact Person
@@ -207,41 +229,84 @@ export function AddCustomerModal({
               />
             </div>
 
-            {/* Row 3: Multi-phone input */}
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Primary Person Role
+              </label>
+              <input
+                type="text"
+                name="primaryPersonRole"
+                value={formData.primaryPersonRole || ""}
+                onChange={handleChange}
+                placeholder="e.g. Site Engineer, Manager, Director"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Row 3: Primary Phone & GST Number */}
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Contact Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone || ""}
+                onChange={handleChange}
+                placeholder="e.g. +91 98765 43210"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                GST Number
+              </label>
+              <input
+                type="text"
+                name="gstNumber"
+                value={formData.gstNumber || ""}
+                onChange={handleChange}
+                placeholder="e.g. 27ABCDE1234F1Z5"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all uppercase"
+              />
+            </div>
+
+            {/* Row 4: Multi-email input */}
             <div className="sm:col-span-2">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-sm font-medium text-slate-900">
-                  Contact Phone Number{phoneNumbers.length > 1 ? "s" : ""}
+                  Email Address{emails.length > 1 ? "es" : ""}
                 </label>
                 <button
                   type="button"
-                  onClick={handleAddPhone}
+                  onClick={handleAddEmail}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-[#083a60] hover:text-[#0c4a7e] bg-blue-50/70 hover:bg-blue-100/70 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add another number</span>
+                  <span>Add another email</span>
                 </button>
               </div>
               <div className="space-y-2">
-                {phoneNumbers.map((phone, idx) => (
+                {emails.map((em, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => handlePhoneChange(idx, e.target.value)}
+                      type="email"
+                      value={em}
+                      onChange={(e) => handleEmailChange(idx, e.target.value)}
                       placeholder={
                         idx === 0
-                          ? "e.g. +91 98765 43210 (Primary Phone)"
-                          : `Secondary Phone ${idx + 1}`
+                          ? "e.g. contact@acmeinfra.com (Primary Email)"
+                          : `Secondary Email ${idx + 1}`
                       }
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
                     />
-                    {phoneNumbers.length > 1 && (
+                    {emails.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => handleRemovePhone(idx)}
+                        onClick={() => handleRemoveEmail(idx)}
                         className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer shrink-0"
-                        title="Remove phone number"
+                        title="Remove email"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -251,22 +316,8 @@ export function AddCustomerModal({
               </div>
             </div>
 
-            {/* Row 4: Email & Payment Terms */}
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email || ""}
-                onChange={handleChange}
-                placeholder="e.g. contact@acmeinfra.com"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
-              />
-            </div>
-
-            <div>
+            {/* Row 5: Payment Terms */}
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
                 Payment Terms
               </label>
@@ -292,6 +343,95 @@ export function AddCustomerModal({
                   </svg>
                 </div>
               </div>
+            </div>
+
+            {/* Additional Persons Section */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Additional Persons
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Add other contact persons with their name, role, and number
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddPerson}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#083a60] hover:text-[#0c4a7e] bg-blue-50/70 hover:bg-blue-100/70 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add another person</span>
+                </button>
+              </div>
+
+              {additionalPersons.length === 0 ? (
+                <div className="p-3.5 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 text-center text-xs text-slate-500">
+                  No additional persons added. Click &quot;Add another person&quot; above to add more contacts.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {additionalPersons.map((person, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80 space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-700">
+                          Person #{idx + 2}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePerson(idx)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          title="Remove person"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">
+                            Name
+                          </label>
+                          <input
+                            type="text"
+                            value={person.name}
+                            onChange={(e) => handlePersonChange(idx, "name", e.target.value)}
+                            placeholder="e.g. Amit Sharma"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">
+                            Role
+                          </label>
+                          <input
+                            type="text"
+                            value={person.role || ""}
+                            onChange={(e) => handlePersonChange(idx, "role", e.target.value)}
+                            placeholder="e.g. Site Supervisor"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">
+                            Number
+                          </label>
+                          <input
+                            type="tel"
+                            value={person.phone || ""}
+                            onChange={(e) => handlePersonChange(idx, "phone", e.target.value)}
+                            placeholder="e.g. +91 98765 43211"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Row 5: Billing Address (full width) */}
@@ -320,6 +460,21 @@ export function AddCustomerModal({
                 value={formData.siteAddress || ""}
                 onChange={handleChange}
                 placeholder="e.g. Metro Line Construction Site, Pillar 104, Mumbai"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all resize-y"
+              />
+            </div>
+
+            {/* Note input field */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Note
+              </label>
+              <textarea
+                name="notes"
+                rows={3}
+                value={formData.notes || ""}
+                onChange={handleChange}
+                placeholder="Add any internal notes, remarks, or special instructions..."
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all resize-y"
               />
             </div>

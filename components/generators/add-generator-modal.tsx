@@ -39,6 +39,11 @@ export function AddGeneratorModal({
     location: "",
     driveLink: "",
     status: "Available",
+    buyingPersonName: "",
+    buyingPersonPhone: "",
+    sellingPersonName: "",
+    sellingPersonPhone: "",
+    notes: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -46,16 +51,42 @@ export function AddGeneratorModal({
 
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   const [prevSuggestedId, setPrevSuggestedId] = useState(suggestedId);
-  if (isOpen && (!prevIsOpen || prevSuggestedId !== suggestedId)) {
-    setPrevIsOpen(isOpen);
+  if (isOpen && !prevIsOpen) {
+    setPrevIsOpen(true);
+    setPrevSuggestedId(suggestedId);
+    setFormData({
+      generatorId: suggestedId || "GEN-0001",
+      assetId: "",
+      name: "",
+      model: "",
+      capacityKva: 0,
+      manufacturingYear: "",
+      engineMake: "",
+      engineNumber: "",
+      alternatorMake: "",
+      alternatorNumber: "",
+      controllerType: "",
+      serialNumber: "",
+      fuelTankLiters: undefined,
+      purchaseDate: "",
+      purchaseCost: "",
+      currentHours: 0,
+      location: "",
+      driveLink: "",
+      status: "Available",
+      buyingPersonName: "",
+      buyingPersonPhone: "",
+      sellingPersonName: "",
+      sellingPersonPhone: "",
+      notes: "",
+    });
+    setError(null);
+  } else if (isOpen && prevSuggestedId !== suggestedId) {
     setPrevSuggestedId(suggestedId);
     setFormData((prev) => ({
       ...prev,
-      generatorId: suggestedId || "GEN-0001",
-      status: "Available",
-      currentHours: 0,
+      generatorId: suggestedId || prev.generatorId || "GEN-0001",
     }));
-    setError(null);
   } else if (!isOpen && prevIsOpen) {
     setPrevIsOpen(false);
   }
@@ -74,7 +105,7 @@ export function AddGeneratorModal({
   if (!isOpen) return null;
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -116,6 +147,32 @@ export function AddGeneratorModal({
         brand: formData.name,
       });
       if (res.success) {
+        setFormData({
+          generatorId: "",
+          assetId: "",
+          name: "",
+          model: "",
+          capacityKva: 0,
+          manufacturingYear: "",
+          engineMake: "",
+          engineNumber: "",
+          alternatorMake: "",
+          alternatorNumber: "",
+          controllerType: "",
+          serialNumber: "",
+          fuelTankLiters: undefined,
+          purchaseDate: "",
+          purchaseCost: "",
+          currentHours: 0,
+          location: "",
+          driveLink: "",
+          status: "Available",
+          buyingPersonName: "",
+          buyingPersonPhone: "",
+          sellingPersonName: "",
+          sellingPersonPhone: "",
+          notes: "",
+        });
         onClose();
       } else {
         setError(res.error || "Failed to create generator");
@@ -172,7 +229,7 @@ export function AddGeneratorModal({
             {/* Row 1: Generator ID & Assert ID */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Generator ID
+                Generator ID <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -187,7 +244,7 @@ export function AddGeneratorModal({
 
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Assert ID <span className="text-xs text-slate-400 font-normal">(Fixed once set)</span>
+                Assert ID <span className="text-xs text-slate-400 font-normal">(Unique)</span>
               </label>
               <input
                 type="text"
@@ -202,7 +259,7 @@ export function AddGeneratorModal({
             {/* Row 2: Generator Name & Capacity (kVA) */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Generator Name
+                Generator Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -217,7 +274,7 @@ export function AddGeneratorModal({
 
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Capacity (kVA)
+                Capacity (kVA) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -235,7 +292,7 @@ export function AddGeneratorModal({
             {/* Row 3: Model & Year of Manufacture */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Model
+                Model <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -410,10 +467,10 @@ export function AddGeneratorModal({
               />
             </div>
 
-            {/* Row 7: Current Running Hours & Current Location */}
+            {/* Row 7: Purchased Running Hours & Purchased Location */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Current Running Hours
+                Purchased Running Hours
               </label>
               <input
                 type="number"
@@ -428,7 +485,7 @@ export function AddGeneratorModal({
 
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Current Location
+                Purchased Location
               </label>
               <input
                 type="text"
@@ -454,8 +511,9 @@ export function AddGeneratorModal({
                 >
                   <option value="Available">Available</option>
                   <option value="On Rent">On Rent</option>
-                  <option value="Under Maintenance">Under Maintenance</option>
-                  <option value="Decommissioned">Decommissioned</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Breakdown">Breakdown</option>
+                  <option value="Sales">Sales</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-500">
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
@@ -467,6 +525,91 @@ export function AddGeneratorModal({
                   </svg>
                 </div>
               </div>
+            </div>
+
+            {/* Buying Person Details */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                Buying Person Details
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Buying Person Name
+              </label>
+              <input
+                type="text"
+                name="buyingPersonName"
+                value={formData.buyingPersonName || ""}
+                onChange={handleChange}
+                placeholder="e.g. Ramesh Kumar"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Buying Person Mobile Number
+              </label>
+              <input
+                type="tel"
+                name="buyingPersonPhone"
+                value={formData.buyingPersonPhone || ""}
+                onChange={handleChange}
+                placeholder="e.g. +91 98765 43210"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Selling Person Details */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                Selling Person Details
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Selling Person Name
+              </label>
+              <input
+                type="text"
+                name="sellingPersonName"
+                value={formData.sellingPersonName || ""}
+                onChange={handleChange}
+                placeholder="e.g. Suresh Patel"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Selling Person Mobile Number
+              </label>
+              <input
+                type="tel"
+                name="sellingPersonPhone"
+                value={formData.sellingPersonPhone || ""}
+                onChange={handleChange}
+                placeholder="e.g. +91 98765 43210"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Note
+              </label>
+              <textarea
+                name="notes"
+                rows={3}
+                value={formData.notes || ""}
+                onChange={handleChange}
+                placeholder="Add any internal notes, remarks, or special instructions..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all resize-y"
+              />
             </div>
           </div>
 

@@ -51,18 +51,45 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
         gen.model.toLowerCase().includes(q) ||
         (gen.engineMake && gen.engineMake.toLowerCase().includes(q)) ||
         (gen.alternatorMake && gen.alternatorMake.toLowerCase().includes(q)) ||
-        (gen.location && gen.location.toLowerCase().includes(q));
+        (gen.location && gen.location.toLowerCase().includes(q)) ||
+        (gen.currentLocation && gen.currentLocation.toLowerCase().includes(q)) ||
+        (gen.buyingPersonName && gen.buyingPersonName.toLowerCase().includes(q)) ||
+        (gen.buyingPersonPhone && gen.buyingPersonPhone.toLowerCase().includes(q)) ||
+        (gen.sellingPersonName && gen.sellingPersonName.toLowerCase().includes(q)) ||
+        (gen.sellingPersonPhone && gen.sellingPersonPhone.toLowerCase().includes(q));
 
       if (!matchesSearch) return false;
 
-      if (statusFilter === "All Status") return true;
-      const statusLower = gen.status.toLowerCase();
-      const filterLower = statusFilter.toLowerCase();
+      const statusLower = (gen.status || "").toLowerCase().trim();
+      const filterLower = statusFilter.toLowerCase().trim();
+
+      // If user selected "Sales", only show generators in Sales / Sold
+      if (filterLower === "sales") {
+        return statusLower === "sales" || statusLower === "sold";
+      }
+
+      // Show all including sales if explicitly chosen
+      if (statusFilter === "All (Including Sales)") {
+        return true;
+      }
+
+      // Default ("All Status"): Hide "Sales" and "Sold" generators from default table view
+      if (statusFilter === "All Status") {
+        return statusLower !== "sales" && statusLower !== "sold";
+      }
 
       if (filterLower === "maintenance") {
         return statusLower.includes("maintenance");
       }
       return statusLower === filterLower;
+    })
+    .sort((a, b) => {
+      const cmp = (a.generatorId || "").localeCompare(b.generatorId || "", undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+      if (cmp !== 0) return cmp;
+      return a.id - b.id;
     });
   }, [generators, searchQuery, statusFilter]);
 
@@ -203,6 +230,8 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
           <option value="Maintenance">Maintenance</option>
           <option value="Breakdown">Breakdown</option>
           <option value="On Rent">On Rent</option>
+          <option value="Sales">Sales</option>
+          <option value="All (Including Sales)">All (Including Sales)</option>
         </select>
         <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
       </div>
@@ -230,6 +259,8 @@ export function GeneratorsView({ initialGenerators }: GeneratorsViewProps) {
             <option value="Maintenance">Maintenance</option>
             <option value="Breakdown">Breakdown</option>
             <option value="On Rent">On Rent</option>
+            <option value="Sales">Sales</option>
+            <option value="All (Including Sales)">All (Including Sales)</option>
           </select>
           <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>

@@ -40,6 +40,8 @@ interface EditRentalOrderModalProps {
   onGeneratorAdded?: (generator: Generator) => void;
 }
 
+const BILLING_COMPANIES = ["PTPDS", "PTPS", "RG"] as const;
+
 const getRateForType = (
   baseDailyRate: number | string | null | undefined,
   rentalType: string
@@ -87,16 +89,22 @@ export function EditRentalOrderModal({
     generatorId: null,
     generatorName: "",
     generatorKva: "",
+    dcNumber: "",
+    ewayBill: "",
     startDate: "",
     endDate: "",
+    startHours: "",
+    closeHours: "",
     rentalType: "Monthly",
     dailyRate: "",
     transportCharges: "0",
     securityDeposit: "0",
     dieselIncluded: false,
+    dieselValue: "",
     operatorIncluded: false,
     gstRate: "18",
     status: "Active",
+    notes: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -146,16 +154,22 @@ export function EditRentalOrderModal({
         generatorId: order.generatorId ?? null,
         generatorName: order.generatorName || "",
         generatorKva: order.generatorKva || "",
+        dcNumber: order.dcNumber || "",
+        ewayBill: order.ewayBill || "",
         startDate: order.startDate || "",
         endDate: order.endDate || "",
+        startHours: order.startHours !== undefined && order.startHours !== null ? String(order.startHours) : "",
+        closeHours: order.closeHours !== undefined && order.closeHours !== null ? String(order.closeHours) : "",
         rentalType: order.rentalType || "Monthly",
         dailyRate: order.dailyRate !== undefined && order.dailyRate !== null ? String(order.dailyRate) : "",
         transportCharges: order.transportCharges !== undefined && order.transportCharges !== null ? String(order.transportCharges) : "0",
         securityDeposit: order.securityDeposit !== undefined && order.securityDeposit !== null ? String(order.securityDeposit) : "0",
         dieselIncluded: Boolean(order.dieselIncluded),
+        dieselValue: order.dieselValue || "",
         operatorIncluded: Boolean(order.operatorIncluded),
         gstRate: order.gstRate !== undefined && order.gstRate !== null ? String(order.gstRate) : "18",
         status: order.status || "Active",
+        notes: order.notes || "",
       });
       setCustomerSearch(order.customerName || "");
       setGeneratorSearch(order.generatorName || "");
@@ -233,7 +247,6 @@ export function EditRentalOrderModal({
       ...prev,
       customerId: c.id,
       customerName: displayName,
-      billingCompany: c.companyName || c.customerName || prev.billingCompany,
       siteLocation: c.siteAddress || prev.siteLocation,
     }));
     setCustomerSearch(displayName);
@@ -245,7 +258,6 @@ export function EditRentalOrderModal({
       ...prev,
       customerId: null,
       customerName: "",
-      billingCompany: "",
       siteLocation: "",
     }));
     setCustomerSearch("");
@@ -336,7 +348,7 @@ export function EditRentalOrderModal({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
     if (name === "rentalType") {
@@ -345,7 +357,11 @@ export function EditRentalOrderModal({
     }
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData((prev) => ({ ...prev, [name]: checked }));
+      setFormData((prev) => ({
+        ...prev,
+        [name]: checked,
+        ...(name === "dieselIncluded" && !checked ? { dieselValue: "" } : {}),
+      }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -401,6 +417,10 @@ export function EditRentalOrderModal({
       setError("Please select or search for a customer.");
       return;
     }
+    if (!formData.billingCompany?.trim()) {
+      setError("Please select a billing company (PTPDS, PTPS, or RG).");
+      return;
+    }
     if (!currentGeneratorName) {
       setError("Please select or search for a generator.");
       return;
@@ -440,8 +460,15 @@ export function EditRentalOrderModal({
       generatorId: currentGeneratorId,
       generatorName: currentGeneratorName,
       generatorKva: formData.generatorKva?.trim() || undefined,
+      dcNumber: formData.dcNumber?.trim() || undefined,
+      ewayBill: formData.ewayBill?.trim() || undefined,
+      startHours: formData.startHours !== undefined && formData.startHours !== "" ? formData.startHours : undefined,
+      closeHours: formData.closeHours !== undefined && formData.closeHours !== "" ? formData.closeHours : undefined,
+      dieselIncluded: Boolean(formData.dieselIncluded),
+      dieselValue: formData.dieselIncluded ? formData.dieselValue?.trim() || undefined : undefined,
       dailyRate: currentDailyRate,
       gstRate: formData.gstRate !== undefined && formData.gstRate !== "" ? formData.gstRate : 18,
+      notes: formData.notes?.trim() || undefined,
     };
 
     setLoading(true);
@@ -571,6 +598,60 @@ export function EditRentalOrderModal({
                     </select>
                     <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   </div>
+                </div>
+              </div>
+
+              {/* Billing Company */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-semibold text-slate-900">
+                    Billing Company <span className="text-rose-500">*</span>
+                  </label>
+                  <span className="text-xs text-slate-400 font-medium">Own Entity</span>
+                </div>
+                <div className="relative">
+                  <Building2 className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <select
+                    name="billingCompany"
+                    value={formData.billingCompany || ""}
+                    onChange={handleChange}
+                    required
+                    className="w-full appearance-none pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer font-medium"
+                  >
+                    <option value="">Select Billing Company</option>
+                    {BILLING_COMPANIES.map((comp) => (
+                      <option key={comp} value={comp}>
+                        {comp}
+                      </option>
+                    ))}
+                    {formData.billingCompany &&
+                      !BILLING_COMPANIES.includes(
+                        formData.billingCompany as (typeof BILLING_COMPANIES)[number]
+                      ) && (
+                        <option value={formData.billingCompany}>
+                          {formData.billingCompany}
+                        </option>
+                      )}
+                  </select>
+                  <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                </div>
+                <div className="flex items-center gap-1.5 mt-2">
+                  {BILLING_COMPANIES.map((comp) => (
+                    <button
+                      key={comp}
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, billingCompany: comp }))
+                      }
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                        formData.billingCompany === comp
+                          ? "bg-[#083a60] text-white border-[#083a60] shadow-xs"
+                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      {comp}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -716,43 +797,6 @@ export function EditRentalOrderModal({
                     <Plus className="w-4 h-4 text-[#083a60] stroke-[2.5]" />
                     <span>Add</span>
                   </button>
-                </div>
-              </div>
-
-              {/* Billing Company & Site */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
-                    Billing Company
-                  </label>
-                  <div className="relative">
-                    <Building2 className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input
-                      type="text"
-                      name="billingCompany"
-                      value={formData.billingCompany || ""}
-                      onChange={handleChange}
-                      placeholder="e.g. Acme Infra Pvt Ltd"
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
-                    Site / Location
-                  </label>
-                  <div className="relative">
-                    <MapPin className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input
-                      type="text"
-                      name="siteLocation"
-                      value={formData.siteLocation || ""}
-                      onChange={handleChange}
-                      placeholder="e.g. Nelson Manickam Road"
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -945,6 +989,24 @@ export function EditRentalOrderModal({
                 </div>
               </div>
 
+              {/* Site / Location */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                  Site / Location
+                </label>
+                <div className="relative">
+                  <MapPin className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    name="siteLocation"
+                    value={formData.siteLocation || ""}
+                    onChange={handleChange}
+                    placeholder="e.g. Nelson Manickam Road"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+                  />
+                </div>
+              </div>
+
               {/* Start Date & End Date */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -1004,6 +1066,41 @@ export function EditRentalOrderModal({
                 </div>
               </div>
 
+              {/* Start & Close Hours */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Start Hours <span className="text-xs font-normal text-slate-500">(hrs)</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    name="startHours"
+                    value={formData.startHours ?? ""}
+                    onChange={handleChange}
+                    placeholder="e.g. 1250"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all placeholder:text-slate-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Close Hours <span className="text-xs font-normal text-slate-500">(hrs)</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    name="closeHours"
+                    value={formData.closeHours ?? ""}
+                    onChange={handleChange}
+                    placeholder="e.g. 1450"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
               {/* Rental Type & Rate */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -1054,7 +1151,7 @@ export function EditRentalOrderModal({
                 </div>
               </div>
 
-              {/* Transport Charges & Security Deposit */}
+              {/* Transport Charges & Advance Payment */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-900 mb-1.5">
@@ -1074,7 +1171,7 @@ export function EditRentalOrderModal({
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-900 mb-1.5">
-                    Security Deposit (₹)
+                    Advance Payment (₹)
                   </label>
                   <input
                     type="number"
@@ -1084,6 +1181,37 @@ export function EditRentalOrderModal({
                     placeholder="e.g. 25000"
                     min="0"
                     step="any"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* DC Number & E-Way Bill */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    DC (Delivery Challan) Number
+                  </label>
+                  <input
+                    type="text"
+                    name="dcNumber"
+                    value={formData.dcNumber || ""}
+                    onChange={handleChange}
+                    placeholder="e.g. DC-1042"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    E-Way Bill
+                  </label>
+                  <input
+                    type="text"
+                    name="ewayBill"
+                    value={formData.ewayBill || ""}
+                    onChange={handleChange}
+                    placeholder="e.g. 121456789012"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
                   />
                 </div>
@@ -1132,27 +1260,46 @@ export function EditRentalOrderModal({
               </div>
 
               {/* Diesel Included & Operator Included Switch Boxes */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 items-start">
                 {/* Diesel Included */}
-                <label
-                  htmlFor="editDieselIncluded"
-                  className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer select-none hover:bg-slate-50/50 transition-colors"
-                >
-                  <span className="text-sm font-semibold text-slate-800">
-                    Diesel Included
-                  </span>
-                  <div className="relative inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      id="editDieselIncluded"
-                      name="dieselIncluded"
-                      checked={Boolean(formData.dieselIncluded)}
-                      onChange={handleChange}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#083a60]"></div>
-                  </div>
-                </label>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="editDieselIncluded"
+                    className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-200 bg-white cursor-pointer select-none hover:bg-slate-50/50 transition-colors"
+                  >
+                    <span className="text-sm font-semibold text-slate-800">
+                      Diesel Included
+                    </span>
+                    <div className="relative inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        id="editDieselIncluded"
+                        name="dieselIncluded"
+                        checked={Boolean(formData.dieselIncluded)}
+                        onChange={handleChange}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#083a60]"></div>
+                    </div>
+                  </label>
+
+                  {/* Value input when Diesel Included is enabled */}
+                  {Boolean(formData.dieselIncluded) && (
+                    <div className="animate-in fade-in slide-in-from-top-1 duration-200 bg-amber-50/50 border border-amber-200/70 rounded-xl p-3">
+                      <label className="block text-xs font-semibold text-slate-900 mb-1.5">
+                        Value
+                      </label>
+                      <input
+                        type="text"
+                        name="dieselValue"
+                        value={formData.dieselValue || ""}
+                        onChange={handleChange}
+                        placeholder="e.g. 200rs diesel or 20L diesel"
+                        className="w-full px-3.5 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all placeholder:text-slate-400"
+                      />
+                    </div>
+                  )}
+                </div>
 
                 {/* Operator Included */}
                 <label
@@ -1174,6 +1321,21 @@ export function EditRentalOrderModal({
                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#083a60]"></div>
                   </div>
                 </label>
+              </div>
+
+              {/* Note */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                  Note
+                </label>
+                <textarea
+                  name="notes"
+                  rows={2}
+                  value={formData.notes || ""}
+                  onChange={handleChange}
+                  placeholder="Add any internal notes, remarks, or special instructions..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all resize-y placeholder:text-slate-400"
+                />
               </div>
 
               {/* Live Calculation Preview */}

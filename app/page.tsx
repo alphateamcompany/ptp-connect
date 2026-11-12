@@ -2,43 +2,35 @@ import { Card } from "@/components/ui/card";
 import { Cpu, Zap, Truck, Receipt, CreditCard, Clock, ChevronRight } from "lucide-react";
 import { db } from "@/lib/db";
 import { generators } from "@/lib/db/schema";
-import { sql, eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getFinanceStats } from "@/app/finance/actions";
 import { formatINR } from "@/lib/utils";
-import { syncGeneratorStatusesWithRentals } from "@/lib/sync-generators";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  let totalCount = 0;
-  let availableCount = 0;
-  let onRentCount = 0;
+  redirect("/generators");
 
-  try {
-    await syncGeneratorStatusesWithRentals();
-
-    const [totalRes] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(generators);
-    totalCount = Number(totalRes?.count || 0);
-
-    const [availRes] = await db
-      .select({ count: sql<number>`count(*)` })
+  const [fleetRes, financeStats] = await Promise.all([
+    db
+      .select({
+        total: sql<number>`count(*)`,
+        available: sql<number>`count(*) filter (where ${generators.status} = 'Available')`,
+        onRent: sql<number>`count(*) filter (where ${generators.status} = 'On Rent')`,
+      })
       .from(generators)
-      .where(eq(generators.status, "Available"));
-    availableCount = Number(availRes?.count || 0);
+      .catch((err) => {
+        console.error("Error loading dashboard fleet stats:", err);
+        return [{ total: 0, available: 0, onRent: 0 }];
+      }),
+    getFinanceStats(),
+  ]);
 
-    const [rentRes] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(generators)
-      .where(eq(generators.status, "On Rent"));
-    onRentCount = Number(rentRes?.count || 0);
-  } catch (err) {
-    console.error("Error loading dashboard fleet stats:", err);
-  }
-
-  const financeStats = await getFinanceStats();
+  const totalCount = Number(fleetRes[0]?.total || 0);
+  const availableCount = Number(fleetRes[0]?.available || 0);
+  const onRentCount = Number(fleetRes[0]?.onRent || 0);
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto space-y-6">
       <div>

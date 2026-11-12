@@ -47,6 +47,7 @@ export function CustomerDetailsModal({
   onDelete,
 }: CustomerDetailsModalProps) {
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -67,10 +68,23 @@ export function CustomerDetailsModal({
         .filter(Boolean)
     : [];
 
+  const emailList = customer.email
+    ? customer.email
+        .split(/[,;\n]+/)
+        .map((e) => e.trim())
+        .filter(Boolean)
+    : [];
+
   const handleCopyPhone = (num: string) => {
     navigator.clipboard.writeText(num);
     setCopiedPhone(num);
     setTimeout(() => setCopiedPhone(null), 2000);
+  };
+
+  const handleCopyEmail = (em: string) => {
+    navigator.clipboard.writeText(em);
+    setCopiedEmail(em);
+    setTimeout(() => setCopiedEmail(null), 2000);
   };
 
   return (
@@ -161,8 +175,15 @@ export function CustomerDetailsModal({
                   <User className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-xs text-slate-500 block">Contact Person</span>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-slate-500 block">Primary Contact Person</span>
+                    {customer.primaryPersonRole && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200/60">
+                        {customer.primaryPersonRole}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900 mt-0.5 block">
                     {customer.contactPerson || "Not specified"}
                   </span>
                 </div>
@@ -222,21 +243,113 @@ export function CustomerDetailsModal({
                   <Mail className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-xs text-slate-500 block">Email Address</span>
-                  {customer.email ? (
-                    <a
-                      href={`mailto:${customer.email}`}
-                      className="text-sm font-medium text-slate-800 hover:text-[#083a60] hover:underline"
-                    >
-                      {customer.email}
-                    </a>
-                  ) : (
+                  <span className="text-xs text-slate-500 block mb-1">
+                    Email Address{emailList.length > 1 ? "es" : ""}
+                  </span>
+                  {emailList.length === 0 ? (
                     <span className="text-sm text-slate-400">Not specified</span>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {emailList.map((email, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between gap-2 bg-slate-50/70 hover:bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200/60 transition-colors"
+                        >
+                          <a
+                            href={`mailto:${email}`}
+                            className="text-sm font-medium text-slate-800 hover:text-[#083a60] hover:underline transition-colors truncate"
+                          >
+                            {email}
+                            {index === 0 && emailList.length > 1 && (
+                              <span className="ml-2 text-[10px] font-semibold text-[#083a60] bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">
+                                Primary
+                              </span>
+                            )}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyEmail(email)}
+                            className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-white transition-colors cursor-pointer shrink-0"
+                            title="Copy email address"
+                          >
+                            {copiedEmail === email ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Additional Persons */}
+          {customer.additionalPersons &&
+            Array.isArray(customer.additionalPersons) &&
+            customer.additionalPersons.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Additional Persons ({customer.additionalPersons.length})
+                </h3>
+                <div className="bg-white border border-slate-200/80 rounded-xl divide-y divide-slate-100 overflow-hidden">
+                  {customer.additionalPersons.map((person, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3.5 flex items-start justify-between gap-3 hover:bg-slate-50/50 transition-colors"
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 mt-0.5">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-slate-900">
+                              {person.name || `Person #${idx + 2}`}
+                            </span>
+                            {person.role && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                                {person.role}
+                              </span>
+                            )}
+                          </div>
+                          {person.phone ? (
+                            <div className="mt-1 flex items-center gap-2">
+                              <a
+                                href={`tel:${person.phone}`}
+                                className="text-xs sm:text-sm font-medium text-slate-700 hover:text-[#083a60] inline-flex items-center gap-1.5 transition-colors"
+                              >
+                                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                <span>{person.phone}</span>
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyPhone(person.phone!)}
+                                className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-white transition-colors cursor-pointer"
+                                title="Copy phone number"
+                              >
+                                {copiedPhone === person.phone ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 mt-1 block">
+                              No phone number
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
           {/* Tax & GST Details */}
           <div className="space-y-3">
@@ -289,6 +402,18 @@ export function CustomerDetailsModal({
               </div>
             </div>
           </div>
+
+          {/* Notes */}
+          {customer.notes && (
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Note
+              </h4>
+              <div className="p-3.5 rounded-xl border border-slate-200/80 bg-[#f8fafc]/60 text-sm text-slate-700 whitespace-pre-wrap">
+                {customer.notes}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modal Footer */}

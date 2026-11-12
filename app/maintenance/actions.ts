@@ -21,6 +21,7 @@ export interface CreateMaintenanceRecordInput {
   nextServiceHours: number | string;
   notes?: string;
   markAvailable: boolean;
+  pdfLink?: string;
 }
 
 export interface MaintenanceStats {
@@ -136,6 +137,7 @@ export async function createMaintenanceRecord(data: CreateMaintenanceRecordInput
         nextServiceHours,
         notes: data.notes?.trim() || null,
         markAvailable: Boolean(data.markAvailable),
+        pdfLink: data.pdfLink?.trim() || null,
       })
       .returning();
 

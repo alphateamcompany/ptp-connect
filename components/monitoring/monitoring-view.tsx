@@ -148,89 +148,6 @@ export function MonitoringView({
         </button>
       </div>
 
-      {/* 4 Stat Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-        {/* Total Runtime */}
-        <div className="relative overflow-hidden bg-white border border-slate-200/80 shadow-xs rounded-2xl p-5 border-l-4 border-l-[#0284c7]">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                TOTAL RUNTIME
-              </span>
-              <span className="text-3xl font-bold text-slate-900 mt-1">
-                {totalRuntime}h
-              </span>
-              <span className="text-xs text-slate-500 mt-0.5">
-                Across sites
-              </span>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-[#083a60] text-white flex items-center justify-center shadow-xs shrink-0">
-              <Clock className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Diesel Filled */}
-        <div className="relative overflow-hidden bg-white border border-slate-200/80 shadow-xs rounded-2xl p-5 border-l-4 border-l-amber-400">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                DIESEL FILLED
-              </span>
-              <span className="text-3xl font-bold text-slate-900 mt-1">
-                {totalDieselFilled}L
-              </span>
-              <span className="text-xs text-slate-500 mt-0.5">
-                Cumulative
-              </span>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shadow-xs shrink-0">
-              <Fuel className="w-5 h-5 stroke-[2.25]" />
-            </div>
-          </div>
-        </div>
-
-        {/* Breakdowns */}
-        <div className="relative overflow-hidden bg-white border border-slate-200/80 shadow-xs rounded-2xl p-5 border-l-4 border-l-red-500">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                BREAKDOWNS
-              </span>
-              <span className="text-3xl font-bold text-slate-900 mt-1">
-                {breakdownsCount}
-              </span>
-              <span className="text-xs text-slate-500 mt-0.5">
-                Reported
-              </span>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-xs shrink-0">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Total Logs */}
-        <div className="relative overflow-hidden bg-white border border-slate-200/80 shadow-xs rounded-2xl p-5 border-l-4 border-l-[#083a60]">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                TOTAL LOGS
-              </span>
-              <span className="text-3xl font-bold text-slate-900 mt-1">
-                {totalLogsCount}
-              </span>
-              <span className="text-xs text-slate-500 mt-0.5">
-                Recorded
-              </span>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-[#083a60] text-white flex items-center justify-center shadow-xs shrink-0">
-              <FileText className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Recent Site Logs Container */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="px-6 py-4.5 border-b border-slate-100">
@@ -340,6 +257,89 @@ export function MonitoringView({
             </table>
           </div>
         )}
+      </div>
+
+      {/* 4 Stat Cards Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+        {/* Total Runtime */}
+        <div className="relative overflow-hidden bg-white border border-slate-200/80 shadow-xs rounded-2xl p-5 border-l-4 border-l-[#0284c7]">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                TOTAL RUNTIME
+              </span>
+              <span className="text-3xl font-bold text-slate-900 mt-1">
+                {totalRuntime}h
+              </span>
+              <span className="text-xs text-slate-500 mt-0.5">
+                Across sites
+              </span>
+            </div>
+            <div className="w-11 h-11 rounded-xl bg-[#083a60] text-white flex items-center justify-center shadow-xs shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Diesel Filled */}
+        <div className="relative overflow-hidden bg-white border border-slate-200/80 shadow-xs rounded-2xl p-5 border-l-4 border-l-amber-400">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                DIESEL FILLED
+              </span>
+              <span className="text-3xl font-bold text-slate-900 mt-1">
+                {totalDieselFilled}L
+              </span>
+              <span className="text-xs text-slate-500 mt-0.5">
+                Cumulative
+              </span>
+            </div>
+            <div className="w-11 h-11 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shadow-xs shrink-0">
+              <Fuel className="w-5 h-5 stroke-[2.25]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Breakdowns */}
+        <div className="relative overflow-hidden bg-white border border-slate-200/80 shadow-xs rounded-2xl p-5 border-l-4 border-l-red-500">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                BREAKDOWNS
+              </span>
+              <span className="text-3xl font-bold text-slate-900 mt-1">
+                {breakdownsCount}
+              </span>
+              <span className="text-xs text-slate-500 mt-0.5">
+                Reported
+              </span>
+            </div>
+            <div className="w-11 h-11 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-xs shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Total Logs */}
+        <div className="relative overflow-hidden bg-white border border-slate-200/80 shadow-xs rounded-2xl p-5 border-l-4 border-l-[#083a60]">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                TOTAL LOGS
+              </span>
+              <span className="text-3xl font-bold text-slate-900 mt-1">
+                {totalLogsCount}
+              </span>
+              <span className="text-xs text-slate-500 mt-0.5">
+                Recorded
+              </span>
+            </div>
+            <div className="w-11 h-11 rounded-xl bg-[#083a60] text-white flex items-center justify-center shadow-xs shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* New Site Log Modal */}

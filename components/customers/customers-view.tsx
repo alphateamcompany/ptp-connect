@@ -48,9 +48,19 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
         (cust.companyName && cust.companyName.toLowerCase().includes(q)) ||
         (cust.customerName && cust.customerName.toLowerCase().includes(q)) ||
         (cust.contactPerson && cust.contactPerson.toLowerCase().includes(q)) ||
+        (cust.primaryPersonRole && cust.primaryPersonRole.toLowerCase().includes(q)) ||
         (cust.email && cust.email.toLowerCase().includes(q)) ||
         (cust.phone && cust.phone.toLowerCase().includes(q)) ||
-        (cust.gstNumber && cust.gstNumber.toLowerCase().includes(q))
+        (cust.gstNumber && cust.gstNumber.toLowerCase().includes(q)) ||
+        (cust.notes && cust.notes.toLowerCase().includes(q)) ||
+        (cust.additionalPersons &&
+          Array.isArray(cust.additionalPersons) &&
+          cust.additionalPersons.some(
+            (p) =>
+              (p.name && p.name.toLowerCase().includes(q)) ||
+              (p.role && p.role.toLowerCase().includes(q)) ||
+              (p.phone && p.phone.toLowerCase().includes(q))
+          ))
       );
     });
   }, [customers, searchQuery]);

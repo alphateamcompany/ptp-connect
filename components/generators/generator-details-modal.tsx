@@ -16,6 +16,8 @@ import {
   Fuel,
   Hash,
   ExternalLink,
+  User,
+  Phone,
 } from "lucide-react";
 
 interface GeneratorDetailsModalProps {
@@ -83,6 +85,13 @@ export function GeneratorDetailsModal({
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
           On Rent
+        </span>
+      );
+    }
+    if (s === "sales" || s === "sold") {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+          Sales
         </span>
       );
     }
@@ -162,7 +171,7 @@ export function GeneratorDetailsModal({
               </div>
               <div>
                 <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider block">
-                  Running Hours
+                  Purchased Running Hours
                 </span>
                 <span className="text-base font-bold text-slate-900 mt-0.5 flex items-center gap-1">
                   <Clock className="w-4 h-4 text-blue-500" />
@@ -180,11 +189,16 @@ export function GeneratorDetailsModal({
               </div>
               <div>
                 <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider block">
-                  Location
+                  Current Location
                 </span>
                 <span className="text-sm font-bold text-slate-900 mt-0.5 flex items-center gap-1 truncate">
                   <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
-                  <span className="truncate">{generator.location || "Unassigned"}</span>
+                  <span className="truncate">
+                    {generator.currentLocation ||
+                      (generator.status?.toLowerCase() === "sales"
+                        ? "—"
+                        : "Main Yard")}
+                  </span>
                 </span>
               </div>
             </div>
@@ -294,8 +308,83 @@ export function GeneratorDetailsModal({
                 </div>
                 <IndianRupee className="w-5 h-5 text-slate-400" />
               </div>
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60 flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-500 block">Purchased Location</span>
+                  <span className="font-semibold text-slate-800 mt-0.5 block">
+                    {generator.location || "Not recorded"}
+                  </span>
+                </div>
+                <MapPin className="w-5 h-5 text-slate-400" />
+              </div>
             </div>
           </div>
+
+          {/* Buying & Selling Person Details */}
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+              Buying & Selling Contacts
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-sm">
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <User className="w-4 h-4 text-[#083a60]" />
+                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Buying Person
+                  </span>
+                </div>
+                <div className="font-semibold text-slate-900 text-sm">
+                  {generator.buyingPersonName || "-"}
+                </div>
+                {generator.buyingPersonPhone ? (
+                  <a
+                    href={`tel:${generator.buyingPersonPhone}`}
+                    className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium mt-1"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    {generator.buyingPersonPhone}
+                  </a>
+                ) : (
+                  <div className="text-xs text-slate-400 mt-1">No phone recorded</div>
+                )}
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <User className="w-4 h-4 text-purple-600" />
+                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Selling Person
+                  </span>
+                </div>
+                <div className="font-semibold text-slate-900 text-sm">
+                  {generator.sellingPersonName || "-"}
+                </div>
+                {generator.sellingPersonPhone ? (
+                  <a
+                    href={`tel:${generator.sellingPersonPhone}`}
+                    className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium mt-1"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    {generator.sellingPersonPhone}
+                  </a>
+                ) : (
+                  <div className="text-xs text-slate-400 mt-1">No phone recorded</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          {generator.notes && (
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Note
+              </h4>
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-[#f8fafc]/60 text-sm text-slate-700 whitespace-pre-wrap">
+                {generator.notes}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modal Footer with Actions: Close, Delete, and EDIT */}

@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { customers, type Customer } from "@/lib/db/schema";
-import { asc, ilike, or, eq } from "drizzle-orm";
+import { customers, type Customer, type AdditionalPerson } from "@/lib/db/schema";
+import { asc, ilike, or, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export interface CreateCustomerInput {
@@ -10,12 +10,15 @@ export interface CreateCustomerInput {
   companyName: string;
   gstNumber?: string;
   contactPerson?: string;
+  primaryPersonRole?: string;
   phone?: string;
+  additionalPersons?: AdditionalPerson[];
   email?: string;
   paymentTerms?: string;
   outstandingAmount?: number | string;
   billingAddress?: string;
   siteAddress?: string;
+  notes?: string;
 }
 
 export async function getCustomers(search?: string) {
@@ -30,9 +33,12 @@ export async function getCustomers(search?: string) {
           ilike(customers.companyName, q),
           ilike(customers.customerName, q),
           ilike(customers.contactPerson, q),
+          ilike(customers.primaryPersonRole, q),
           ilike(customers.phone, q),
           ilike(customers.email, q),
-          ilike(customers.gstNumber, q)
+          ilike(customers.gstNumber, q),
+          ilike(customers.notes, q),
+          sql`${customers.additionalPersons}::text ILIKE ${q}`
         )
       );
     }
@@ -54,6 +60,16 @@ export async function createCustomer(data: CreateCustomerInput) {
       return { success: false, error: "Customer Name and Company Name are required." };
     }
 
+    const cleanPersons: AdditionalPerson[] = Array.isArray(data.additionalPersons)
+      ? data.additionalPersons
+          .map((p) => ({
+            name: p.name?.trim() || "",
+            role: p.role?.trim() || undefined,
+            phone: p.phone?.trim() || undefined,
+          }))
+          .filter((p) => p.name || p.phone || p.role)
+      : [];
+
     const newCustomer = await db
       .insert(customers)
       .values({
@@ -61,7 +77,9 @@ export async function createCustomer(data: CreateCustomerInput) {
         companyName,
         gstNumber: data.gstNumber?.trim() || null,
         contactPerson: data.contactPerson?.trim() || null,
+        primaryPersonRole: data.primaryPersonRole?.trim() || null,
         phone: data.phone?.trim() || null,
+        additionalPersons: cleanPersons,
         email: data.email?.trim() || null,
         paymentTerms: data.paymentTerms?.trim() || "Cash",
         outstandingAmount:
@@ -70,6 +88,7 @@ export async function createCustomer(data: CreateCustomerInput) {
             : "0",
         billingAddress: data.billingAddress?.trim() || null,
         siteAddress: data.siteAddress?.trim() || null,
+        notes: data.notes?.trim() || null,
       })
       .returning();
 
@@ -107,8 +126,22 @@ export async function updateCustomer(
     if (data.contactPerson !== undefined) {
       updateValues.contactPerson = data.contactPerson.trim() || null;
     }
+    if (data.primaryPersonRole !== undefined) {
+      updateValues.primaryPersonRole = data.primaryPersonRole.trim() || null;
+    }
     if (data.phone !== undefined) {
       updateValues.phone = data.phone.trim() || null;
+    }
+    if (data.additionalPersons !== undefined) {
+      updateValues.additionalPersons = Array.isArray(data.additionalPersons)
+        ? data.additionalPersons
+            .map((p) => ({
+              name: p.name?.trim() || "",
+              role: p.role?.trim() || undefined,
+              phone: p.phone?.trim() || undefined,
+            }))
+            .filter((p) => p.name || p.phone || p.role)
+        : [];
     }
     if (data.email !== undefined) {
       updateValues.email = data.email.trim() || null;
@@ -125,6 +158,9 @@ export async function updateCustomer(
     }
     if (data.siteAddress !== undefined) {
       updateValues.siteAddress = data.siteAddress.trim() || null;
+    }
+    if (data.notes !== undefined) {
+      updateValues.notes = data.notes.trim() || null;
     }
 
     const updated = await db

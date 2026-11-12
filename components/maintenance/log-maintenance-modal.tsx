@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { X, Calendar, ChevronDown, Loader2 } from "lucide-react";
+import { X, Calendar, ChevronDown, Loader2, FileText } from "lucide-react";
 import { Generator } from "@/lib/db/schema";
 import { CreateMaintenanceRecordInput } from "@/app/maintenance/actions";
+import { cn } from "@/lib/utils";
 
 interface LogMaintenanceModalProps {
   isOpen: boolean;
@@ -42,12 +43,13 @@ export function LogMaintenanceModal({
 }: LogMaintenanceModalProps) {
   const [selectedGeneratorId, setSelectedGeneratorId] = useState<number | null>(null);
   const [generatorName, setGeneratorName] = useState("");
-  const [serviceType, setServiceType] = useState("Oil Change");
+  const [selectedServiceTypes, setSelectedServiceTypes] = useState<string[]>([]);
   const [serviceDate, setServiceDate] = useState(getTodayFormatted());
   const [technician, setTechnician] = useState("");
   const [cost, setCost] = useState("0");
   const [hoursAtService, setHoursAtService] = useState("0");
   const [nextServiceHours, setNextServiceHours] = useState("0");
+  const [pdfLink, setPdfLink] = useState("");
   const [notes, setNotes] = useState("");
   const [markAvailable, setMarkAvailable] = useState(false);
 
@@ -86,6 +88,12 @@ export function LogMaintenanceModal({
     }
   };
 
+  const handleServiceTypeToggle = (type: string) => {
+    setSelectedServiceTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
   const handleNativeDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value; // YYYY-MM-DD
     if (val) {
@@ -102,8 +110,8 @@ export function LogMaintenanceModal({
       setError("Please select a generator");
       return;
     }
-    if (!serviceType.trim()) {
-      setError("Please select a service type");
+    if (selectedServiceTypes.length === 0) {
+      setError("Please select at least one service type");
       return;
     }
     if (!serviceDate.trim()) {
@@ -116,7 +124,7 @@ export function LogMaintenanceModal({
       const res = await onSubmit({
         generatorId: selectedGeneratorId,
         generatorName: generatorName.trim(),
-        serviceType: serviceType.trim(),
+        serviceType: selectedServiceTypes.join(", "),
         serviceDate: serviceDate.trim(),
         technician: technician.trim() || undefined,
         cost: Math.max(0, parseFloat(cost) || 0),
@@ -124,9 +132,22 @@ export function LogMaintenanceModal({
         nextServiceHours: Math.max(0, parseInt(nextServiceHours, 10) || 0),
         notes: notes.trim() || undefined,
         markAvailable,
+        pdfLink: pdfLink.trim() || undefined,
       });
 
       if (res.success) {
+        setSelectedGeneratorId(null);
+        setGeneratorName("");
+        setSelectedServiceTypes([]);
+        setServiceDate(getTodayFormatted());
+        setTechnician("");
+        setCost("0");
+        setHoursAtService("0");
+        setNextServiceHours("0");
+        setPdfLink("");
+        setNotes("");
+        setMarkAvailable(false);
+        setError(null);
         onClose();
       } else {
         setError(res.error || "Failed to save maintenance record");
@@ -169,57 +190,59 @@ export function LogMaintenanceModal({
         </div>
 
         {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           {error && (
             <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
               {error}
             </div>
           )}
 
-          {/* Generator Select */}
-          <div>
-            <label className="block text-sm font-bold text-slate-900 mb-1">
-              Generator
-            </label>
-            <div className="relative">
-              <select
-                value={selectedGeneratorId || ""}
-                onChange={handleGeneratorChange}
-                className="w-full appearance-none px-3.5 py-2 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
-              >
-                <option value="">Select generator</option>
-                {generators.map((gen) => (
-                  <option key={gen.id} value={gen.id}>
-                    {gen.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Service Type & Date */}
+          {/* Generator & Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* Generator Select */}
             <div>
               <label className="block text-sm font-bold text-slate-900 mb-1">
-                Service Type
+                Generator
               </label>
               <div className="relative">
                 <select
-                  value={serviceType}
-                  onChange={(e) => setServiceType(e.target.value)}
+                  value={selectedGeneratorId || ""}
+                  onChange={handleGeneratorChange}
                   className="w-full appearance-none px-3.5 py-2 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs cursor-pointer"
                 >
-                  {SERVICE_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
+                  <option value="">Select generator</option>
+                  {generators.map((gen) => {
+                    const capNum = gen.capacityKva
+                      ? parseFloat(String(gen.capacityKva))
+                      : NaN;
+                    const capText =
+                      !isNaN(capNum) && capNum > 0 ? ` (${capNum} kVA)` : "";
+                    return (
+                      <option key={gen.id} value={gen.id}>
+                        {gen.name}{capText}
+                      </option>
+                    );
+                  })}
                 </select>
                 <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
+              {selectedGeneratorId && (() => {
+                const selectedGen = generators.find((g) => g.id === selectedGeneratorId);
+                const capNum = selectedGen?.capacityKva
+                  ? parseFloat(String(selectedGen.capacityKva))
+                  : NaN;
+                if (!isNaN(capNum) && capNum > 0) {
+                  return (
+                    <p className="text-[11px] font-medium text-slate-500 mt-1">
+                      Capacity: <span className="font-semibold text-slate-700">{capNum} kVA</span>
+                    </p>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
+            {/* Service Date */}
             <div>
               <label className="block text-sm font-bold text-slate-900 mb-1">
                 Date
@@ -252,6 +275,58 @@ export function LogMaintenanceModal({
             </div>
           </div>
 
+          {/* Service Types (Multiple Checkboxes) */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-bold text-slate-900">
+                Service Types
+              </label>
+              {selectedServiceTypes.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-[#083a60] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">
+                    {selectedServiceTypes.length} selected
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedServiceTypes([])}
+                    className="text-xs text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50/70 border border-slate-200/80">
+              {SERVICE_TYPES.map((type, idx) => {
+                const isChecked = selectedServiceTypes.includes(type);
+                const isLastOdd =
+                  idx === SERVICE_TYPES.length - 1 &&
+                  SERVICE_TYPES.length % 2 !== 0;
+                return (
+                  <label
+                    key={type}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2 rounded-lg border text-xs sm:text-sm cursor-pointer select-none transition-all",
+                      isLastOdd ? "sm:col-span-2" : "",
+                      isChecked
+                        ? "bg-white border-[#083a60] text-slate-900 font-semibold shadow-2xs ring-1 ring-[#083a60]"
+                        : "bg-white/80 border-slate-200 text-slate-700 hover:bg-white hover:border-slate-300"
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleServiceTypeToggle(type)}
+                      className="w-4 h-4 rounded border-slate-300 text-[#083a60] accent-[#083a60] focus:ring-[#083a60] cursor-pointer shrink-0"
+                    />
+                    <span>{type}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Technician & Cost */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
@@ -269,7 +344,7 @@ export function LogMaintenanceModal({
 
             <div>
               <label className="block text-sm font-bold text-slate-900 mb-1">
-                Cost (₹)
+                Total Cost (₹)
               </label>
               <input
                 type="number"
@@ -311,6 +386,23 @@ export function LogMaintenanceModal({
                 placeholder="e.g. 1500"
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
               />
+            </div>
+          </div>
+
+          {/* PDF Link */}
+          <div>
+            <label className="block text-sm font-bold text-slate-900 mb-1">
+              PDF Link
+            </label>
+            <div className="relative">
+              <input
+                type="url"
+                value={pdfLink}
+                onChange={(e) => setPdfLink(e.target.value)}
+                placeholder="e.g. https://drive.google.com/... (link to invoice or service report)"
+                className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all shadow-2xs"
+              />
+              <FileText className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
           </div>
 

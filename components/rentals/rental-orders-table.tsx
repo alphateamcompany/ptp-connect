@@ -10,8 +10,6 @@ import {
   ChevronDown,
   ArrowUpDown,
   Calendar,
-  Fuel,
-  UserCheck,
   MapPin,
   Zap,
 } from "lucide-react";
@@ -180,30 +178,6 @@ export function RentalOrdersTable({
                 Type & Rate
               </th>
 
-              {/* Inclusions */}
-              <th className="py-3.5 px-4 font-bold whitespace-nowrap">
-                Inclusions
-              </th>
-
-              {/* Total Amount */}
-              <th
-                onClick={() => handleHeaderSort("total")}
-                className="py-3.5 px-4 font-bold whitespace-nowrap cursor-pointer hover:text-slate-900 text-right group"
-              >
-                <div className="inline-flex items-center justify-end gap-1.5 w-full">
-                  <span>Total Amount</span>
-                  {sortBy?.startsWith("total_") ? (
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 text-[#083a60] transition-transform ${
-                        sortBy === "total_asc" ? "rotate-180" : ""
-                      }`}
-                    />
-                  ) : (
-                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 opacity-60" />
-                  )}
-                </div>
-              </th>
-
               {/* Status */}
               <th className="py-3.5 px-4 font-bold whitespace-nowrap text-center">
                 Status
@@ -233,6 +207,12 @@ export function RentalOrdersTable({
                     <span className="font-mono font-semibold text-xs text-[#083a60] bg-blue-50/70 border border-blue-100 px-2.5 py-1 rounded-lg inline-block whitespace-nowrap group-hover:border-blue-200 transition-colors">
                       {order.orderNumber}
                     </span>
+                    {(order.dcNumber || order.ewayBill) && (
+                      <div className="flex flex-col gap-0.5 mt-1 font-mono text-[10px] text-slate-500">
+                        {order.dcNumber && <span title={`DC: ${order.dcNumber}`}>DC: {order.dcNumber}</span>}
+                        {order.ewayBill && <span title={`E-Way: ${order.ewayBill}`}>E-Way: {order.ewayBill}</span>}
+                      </div>
+                    )}
                   </td>
 
                   {/* Customer */}
@@ -241,8 +221,10 @@ export function RentalOrdersTable({
                       {order.customerName}
                     </div>
                     {order.billingCompany && (
-                      <div className="text-[11px] text-slate-500 truncate max-w-[200px]" title={order.billingCompany}>
-                        Billing: {order.billingCompany}
+                      <div className="mt-0.5 truncate max-w-[200px]" title={`Billed by ${order.billingCompany}`}>
+                        <span className="inline-flex items-center gap-1 font-semibold text-[#083a60] bg-blue-50 border border-blue-100 px-1.5 py-0.2 rounded text-[10px]">
+                          Billed by: {order.billingCompany}
+                        </span>
                       </div>
                     )}
                   </td>
@@ -280,6 +262,11 @@ export function RentalOrdersTable({
                         {formatDate(order.startDate)} – {formatDate(order.endDate)}
                       </span>
                     </div>
+                    {(order.startHours !== null && order.startHours !== undefined || order.closeHours !== null && order.closeHours !== undefined) && (
+                      <div className="text-[10px] text-slate-500 font-mono mt-0.5 pl-5">
+                        Hrs: {order.startHours ?? "—"} – {order.closeHours ?? "—"}
+                      </div>
+                    )}
                   </td>
 
                   {/* Type & Rate */}
@@ -291,44 +278,6 @@ export function RentalOrdersTable({
                       <span className="text-xs font-semibold text-slate-800">
                         {formatINR(order.dailyRate)}/{getRateUnitShort(order.rentalType)}
                       </span>
-                    </div>
-                  </td>
-
-                  {/* Inclusions */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">
-                    {order.dieselIncluded || order.operatorIncluded ? (
-                      <div className="flex items-center gap-1.5">
-                        {order.dieselIncluded && (
-                          <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80"
-                            title="Diesel Included"
-                          >
-                            <Fuel className="w-3 h-3 text-amber-600" />
-                            <span>Diesel</span>
-                          </span>
-                        )}
-                        {order.operatorIncluded && (
-                          <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80"
-                            title="Operator Included"
-                          >
-                            <UserCheck className="w-3 h-3 text-amber-600" />
-                            <span>Operator</span>
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 text-xs">—</span>
-                    )}
-                  </td>
-
-                  {/* Total Amount */}
-                  <td className="py-3.5 px-4 whitespace-nowrap text-right">
-                    <div className="font-bold text-[#083a60] text-sm">
-                      {formatINR(order.totalAmount)}
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-normal">
-                      Rent: {formatINR(order.rentalCharge)}
                     </div>
                   </td>
 

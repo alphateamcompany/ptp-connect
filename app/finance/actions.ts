@@ -190,8 +190,10 @@ export async function getFinanceStats(
   invoicesList?: Invoice[],
   expensesList?: Expense[]
 ): Promise<FinanceStats> {
-  const invs = invoicesList || (await getInvoices());
-  const exps = expensesList || (await getExpenses());
+  const [invs, exps] = await Promise.all([
+    invoicesList ? Promise.resolve(invoicesList) : getInvoices(),
+    expensesList ? Promise.resolve(expensesList) : getExpenses(),
+  ]);
 
   let totalRevenue = 0;
   let totalCollected = 0;

@@ -48,6 +48,11 @@ export function EditGeneratorModal({
         location: generator.location || "",
         driveLink: generator.driveLink || "",
         status: generator.status || "Available",
+        buyingPersonName: generator.buyingPersonName || "",
+        buyingPersonPhone: generator.buyingPersonPhone || "",
+        sellingPersonName: generator.sellingPersonName || "",
+        sellingPersonPhone: generator.sellingPersonPhone || "",
+        notes: generator.notes || "",
       });
       setError(null);
     }
@@ -66,7 +71,7 @@ export function EditGeneratorModal({
   if (!isOpen || !generator) return null;
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -161,7 +166,7 @@ export function EditGeneratorModal({
             {/* Row 1: Generator ID & Assert ID */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Generator ID
+                Generator ID <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -176,12 +181,7 @@ export function EditGeneratorModal({
 
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Assert ID{" "}
-                {generator.assetId ? (
-                  <span className="text-xs text-amber-600 font-normal">(Fixed • cannot be modified)</span>
-                ) : (
-                  <span className="text-xs text-slate-400 font-normal">(Fixed once set)</span>
-                )}
+                Assert ID <span className="text-xs text-slate-400 font-normal">(Unique)</span>
               </label>
               <input
                 type="text"
@@ -189,19 +189,14 @@ export function EditGeneratorModal({
                 value={formData.assetId || ""}
                 onChange={handleChange}
                 placeholder="e.g. AST-001"
-                disabled={Boolean(generator.assetId)}
-                className={`w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm transition-all ${
-                  generator.assetId
-                    ? "bg-slate-100 text-slate-500 cursor-not-allowed font-mono"
-                    : "bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent"
-                }`}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
               />
             </div>
 
             {/* Row 2: Generator Name & Capacity (kVA) */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Generator Name
+                Generator Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -216,7 +211,7 @@ export function EditGeneratorModal({
 
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Capacity (kVA)
+                Capacity (kVA) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -234,7 +229,7 @@ export function EditGeneratorModal({
             {/* Row 3: Model & Year of Manufacture */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Model
+                Model <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -421,10 +416,10 @@ export function EditGeneratorModal({
               />
             </div>
 
-            {/* Row 7: Current Running Hours & Current Location */}
+            {/* Row 7: Purchased Running Hours & Purchased Location */}
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Current Running Hours
+                Purchased Running Hours
               </label>
               <input
                 type="number"
@@ -439,7 +434,7 @@ export function EditGeneratorModal({
 
             <div>
               <label className="block text-sm font-medium text-slate-900 mb-1.5">
-                Current Location
+                Purchased Location
               </label>
               <input
                 type="text"
@@ -467,7 +462,7 @@ export function EditGeneratorModal({
                   <option value="On Rent">On Rent</option>
                   <option value="Maintenance">Maintenance</option>
                   <option value="Breakdown">Breakdown</option>
-                  <option value="Decommissioned">Decommissioned</option>
+                  <option value="Sales">Sales</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-500">
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
@@ -484,6 +479,91 @@ export function EditGeneratorModal({
                   Auto-updated from active rental orders.
                 </p>
               )}
+            </div>
+
+            {/* Buying Person Details */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                Buying Person Details
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Buying Person Name
+              </label>
+              <input
+                type="text"
+                name="buyingPersonName"
+                value={formData.buyingPersonName || ""}
+                onChange={handleChange}
+                placeholder="e.g. Ramesh Kumar"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Buying Person Mobile Number
+              </label>
+              <input
+                type="tel"
+                name="buyingPersonPhone"
+                value={formData.buyingPersonPhone || ""}
+                onChange={handleChange}
+                placeholder="e.g. +91 98765 43210"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Selling Person Details */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                Selling Person Details
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Selling Person Name
+              </label>
+              <input
+                type="text"
+                name="sellingPersonName"
+                value={formData.sellingPersonName || ""}
+                onChange={handleChange}
+                placeholder="e.g. Suresh Patel"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Selling Person Mobile Number
+              </label>
+              <input
+                type="tel"
+                name="sellingPersonPhone"
+                value={formData.sellingPersonPhone || ""}
+                onChange={handleChange}
+                placeholder="e.g. +91 98765 43210"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+              <label className="block text-sm font-medium text-slate-900 mb-1.5">
+                Note
+              </label>
+              <textarea
+                name="notes"
+                rows={3}
+                value={formData.notes || ""}
+                onChange={handleChange}
+                placeholder="Add any internal notes, remarks, or special instructions..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#083a60] focus:border-transparent transition-all resize-y"
+              />
             </div>
           </div>
 

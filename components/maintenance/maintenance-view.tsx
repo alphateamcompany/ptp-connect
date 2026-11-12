@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
-  Wrench,
-  AlertTriangle,
-  Cpu,
   Plus,
   Trash2,
   CheckCircle2,
+  FileText,
+  Eye,
 } from "lucide-react";
 import { MaintenanceRecord, Generator } from "@/lib/db/schema";
-import { Card } from "@/components/ui/card";
 import {
   createMaintenanceRecord,
   deleteMaintenanceRecord,
@@ -19,11 +17,12 @@ import {
 } from "@/app/maintenance/actions";
 import { LogMaintenanceModal } from "./log-maintenance-modal";
 import { DeleteMaintenanceModal } from "./delete-maintenance-modal";
+import { MaintenanceDetailsModal } from "./maintenance-details-modal";
 
 interface MaintenanceViewProps {
   initialRecords: MaintenanceRecord[];
   generators: Generator[];
-  stats: MaintenanceStats;
+  stats?: MaintenanceStats;
 }
 
 function formatRupee(amount: number | string): string {
@@ -58,11 +57,11 @@ function formatServiceDate(dateStr: string): string {
 export function MaintenanceView({
   initialRecords,
   generators,
-  stats: initialStats,
 }: MaintenanceViewProps) {
   const [records, setRecords] = useState<MaintenanceRecord[]>(initialRecords);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<MaintenanceRecord | null>(null);
+  const [recordToView, setRecordToView] = useState<MaintenanceRecord | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
   const showNotification = (msg: string) => {
@@ -71,12 +70,6 @@ export function MaintenanceView({
       setNotification(null);
     }, 4000);
   };
-
-  // Dynamically calculate total services and total cost from records state
-  const totalServices = records.length;
-  const totalCost = useMemo(() => {
-    return records.reduce((sum, r) => sum + (parseFloat(r.cost) || 0), 0);
-  }, [records]);
 
   const handleCreateRecord = async (data: CreateMaintenanceRecordInput) => {
     const res = await createMaintenanceRecord(data);
@@ -131,93 +124,6 @@ export function MaintenanceView({
         </button>
       </div>
 
-      {/* Metric Cards (4 cards in a row) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-        {/* TOTAL SERVICES */}
-        <Card className="relative overflow-hidden bg-white border border-slate-100 shadow-xs rounded-2xl py-5 pl-7 pr-5">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#0284c7]" />
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                TOTAL SERVICES
-              </span>
-              <span className="text-3xl font-bold text-slate-900 mt-2">
-                {totalServices}
-              </span>
-              <span className="text-xs text-slate-500 mt-1">
-                All time
-              </span>
-            </div>
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-[#083a60] text-white shadow-xs shrink-0">
-              <Wrench className="w-5 h-5" />
-            </div>
-          </div>
-        </Card>
-
-        {/* TOTAL COST */}
-        <Card className="relative overflow-hidden bg-white border border-slate-100 shadow-xs rounded-2xl py-5 pl-7 pr-5">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#eab308]" />
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                TOTAL COST
-              </span>
-              <span className="text-3xl font-bold text-slate-900 mt-2">
-                {formatRupee(totalCost)}
-              </span>
-              <span className="text-xs text-slate-500 mt-1">
-                Maintenance spend
-              </span>
-            </div>
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-[#eab308] text-slate-950 font-bold text-xl shadow-xs shrink-0">
-              ₹
-            </div>
-          </div>
-        </Card>
-
-        {/* DUE FOR SERVICE */}
-        <Card className="relative overflow-hidden bg-white border border-slate-100 shadow-xs rounded-2xl py-5 pl-7 pr-5">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#dc2626]" />
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                DUE FOR SERVICE
-              </span>
-              <span className="text-3xl font-bold text-slate-900 mt-2">
-                {initialStats.dueForService}
-              </span>
-              <span className="text-xs text-slate-500 mt-1">
-                &gt;3000 hrs
-              </span>
-            </div>
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-[#dc2626] text-white shadow-xs shrink-0">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-          </div>
-        </Card>
-
-        {/* UNDER MAINTENANCE */}
-        <Card className="relative overflow-hidden bg-white border border-slate-100 shadow-xs rounded-2xl py-5 pl-7 pr-5">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#083a60]" />
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                UNDER MAINTENANCE
-              </span>
-              <span className="text-3xl font-bold text-slate-900 mt-2">
-                {initialStats.underMaintenance}
-              </span>
-              <span className="text-xs text-slate-500 mt-1">
-                Right now
-              </span>
-            </div>
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-[#083a60] text-white shadow-xs shrink-0">
-              <Cpu className="w-5 h-5" />
-            </div>
-          </div>
-        </Card>
-      </div>
-
       {/* Service History Table Card */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-100">
@@ -243,7 +149,7 @@ export function MaintenanceView({
                   TECHNICIAN
                 </th>
                 <th className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-6 py-4">
-                  COST
+                  TOTAL COST
                 </th>
                 <th className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-6 py-4 text-right">
                   ACTIONS
@@ -269,13 +175,32 @@ export function MaintenanceView({
                     <td className="px-6 py-4.5 text-sm text-slate-700 whitespace-nowrap font-normal">
                       {formatServiceDate(rec.serviceDate)}
                     </td>
-                    <td className="px-6 py-4.5 text-sm font-bold text-slate-900 whitespace-nowrap">
+                    <td
+                      onClick={() => setRecordToView(rec)}
+                      className="px-6 py-4.5 text-sm font-bold text-slate-900 whitespace-nowrap cursor-pointer hover:text-[#083a60] transition-colors"
+                      title="Click to view details"
+                    >
                       {rec.generatorName}
                     </td>
-                    <td className="px-6 py-4.5 whitespace-nowrap">
-                      <span className="inline-block px-3 py-1 rounded-full border border-slate-200 text-xs font-semibold text-slate-700 bg-white shadow-2xs">
-                        {rec.serviceType}
-                      </span>
+                    <td className="px-6 py-4.5">
+                      <div className="flex flex-wrap gap-1.5 max-w-xs">
+                        {rec.serviceType ? (
+                          rec.serviceType
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean)
+                            .map((type, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-block px-2.5 py-0.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-700 bg-white shadow-2xs whitespace-nowrap"
+                              >
+                                {type}
+                              </span>
+                            ))
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4.5 text-sm text-slate-700 whitespace-nowrap">
                       {rec.technician || "-"}
@@ -284,14 +209,41 @@ export function MaintenanceView({
                       {formatRupee(rec.cost)}
                     </td>
                     <td className="px-6 py-4.5 text-right whitespace-nowrap">
-                      <button
-                        onClick={() => setRecordToDelete(rec)}
-                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                        title="Delete service log"
-                        aria-label="Delete service log"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setRecordToView(rec)}
+                          className="p-1.5 text-slate-500 hover:text-[#083a60] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                          title="View service details"
+                          aria-label="View service details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        {rec.pdfLink && (
+                          <a
+                            href={
+                              rec.pdfLink.startsWith("http://") ||
+                              rec.pdfLink.startsWith("https://")
+                                ? rec.pdfLink
+                                : `https://${rec.pdfLink}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#083a60] bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+                            title="Open PDF Document"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>PDF</span>
+                          </a>
+                        )}
+                        <button
+                          onClick={() => setRecordToDelete(rec)}
+                          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          title="Delete service log"
+                          aria-label="Delete service log"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -308,6 +260,24 @@ export function MaintenanceView({
         generators={generators}
         onSubmit={handleCreateRecord}
       />
+
+      {/* Maintenance Details Modal */}
+      {recordToView && (
+        <MaintenanceDetailsModal
+          record={recordToView}
+          isOpen={!!recordToView}
+          onClose={() => setRecordToView(null)}
+          onDeleteClick={(rec) => {
+            setRecordToView(null);
+            setRecordToDelete(rec);
+          }}
+          generator={
+            recordToView.generatorId
+              ? generators.find((g) => g.id === recordToView.generatorId)
+              : null
+          }
+        />
+      )}
 
       {/* Delete Maintenance Modal */}
       {recordToDelete && (

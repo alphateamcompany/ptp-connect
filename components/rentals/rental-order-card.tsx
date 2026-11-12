@@ -79,9 +79,21 @@ export function RentalOrderCard({
       <div>
         {/* Top Header Row: Order Number & Status Badge */}
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-semibold text-slate-500 tracking-wide">
-            {order.orderNumber}
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs font-semibold text-slate-500 tracking-wide">
+              {order.orderNumber}
+            </span>
+            {order.dcNumber && (
+              <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200" title={`DC: ${order.dcNumber}`}>
+                DC: {order.dcNumber}
+              </span>
+            )}
+            {order.ewayBill && (
+              <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200" title={`E-Way: ${order.ewayBill}`}>
+                EWB: {order.ewayBill}
+              </span>
+            )}
+          </div>
           <span
             className={`px-3 py-0.5 rounded-full text-xs font-semibold tracking-tight border ${
               isCompleted
@@ -98,8 +110,8 @@ export function RentalOrderCard({
           {order.customerName}
         </h3>
         {order.billingCompany && (
-          <p className="text-xs text-slate-500 font-medium mt-0.5 truncate" title={order.billingCompany}>
-            Billing: {order.billingCompany}
+          <p className="text-xs text-slate-500 font-medium mt-0.5 truncate" title={`Billed by ${order.billingCompany}`}>
+            Billed by: <span className="font-semibold text-slate-700">{order.billingCompany}</span>
           </p>
         )}
         <div className="flex items-center gap-2 mt-1 mb-3">
@@ -149,12 +161,22 @@ export function RentalOrderCard({
           </div>
         </div>
 
+        {/* Start / Close Hours */}
+        {(order.startHours !== null && order.startHours !== undefined || order.closeHours !== null && order.closeHours !== undefined) && (
+          <div className="flex items-center justify-between text-xs font-mono text-slate-600 mb-4 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+            <span className="text-slate-400 font-sans">Hours:</span>
+            <span className="font-semibold text-slate-800">
+              {order.startHours ?? "—"} hrs → {order.closeHours ?? "—"} hrs
+            </span>
+          </div>
+        )}
+
         {/* Inclusions Badges */}
         {(order.dieselIncluded || order.operatorIncluded) && (
           <div className="flex flex-wrap items-center gap-2 mb-4">
             {order.dieselIncluded && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-400 text-slate-950">
-                Diesel Incl.
+                Diesel Incl.{order.dieselValue ? ` (${order.dieselValue})` : ""}
               </span>
             )}
             {order.operatorIncluded && (

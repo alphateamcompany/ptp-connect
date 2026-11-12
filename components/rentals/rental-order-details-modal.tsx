@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   Loader2,
   MapPin,
+  FileText,
+  Gauge,
 } from "lucide-react";
 import { RentalOrder } from "@/lib/db/schema";
 
@@ -195,8 +197,11 @@ export function RentalOrderDetailsModal({
                 {order.customerName}
               </div>
               {order.billingCompany && (
-                <div className="text-xs text-slate-600 font-medium mt-1">
-                  Billing: {order.billingCompany}
+                <div className="text-xs text-slate-600 font-medium mt-1 flex items-center gap-1">
+                  <span>Billed by:</span>
+                  <span className="font-bold text-[#083a60] bg-blue-50 border border-blue-100 px-1.5 py-0.2 rounded text-[11px]">
+                    {order.billingCompany}
+                  </span>
                 </div>
               )}
               {order.customerId && (
@@ -274,6 +279,62 @@ export function RentalOrderDetailsModal({
               </div>
             )}
 
+            {/* Delivery Challan & E-Way Bill */}
+            {(order.dcNumber || order.ewayBill) && (
+              <div className="pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {order.dcNumber ? (
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="text-slate-500 font-medium">DC Number:</span>
+                    <span className="font-semibold text-slate-800 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/80 font-mono">
+                      {order.dcNumber}
+                    </span>
+                  </div>
+                ) : null}
+                {order.ewayBill ? (
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="text-slate-500 font-medium">E-Way Bill:</span>
+                    <span className="font-semibold text-slate-800 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/80 font-mono">
+                      {order.ewayBill}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            {/* Meter Reading / Hours */}
+            {(order.startHours !== null && order.startHours !== undefined || order.closeHours !== null && order.closeHours !== undefined) && (
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3 text-xs bg-slate-50/70 px-3 py-2.5 rounded-lg border border-slate-200/70">
+                <div className="flex items-center gap-1.5 text-slate-600 font-semibold">
+                  <Gauge className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Meter Reading:</span>
+                </div>
+                <div className="flex items-center gap-3.5 flex-wrap font-mono text-xs">
+                  <div>
+                    <span className="text-slate-400 font-sans text-[11px] mr-1">Start:</span>
+                    <span className="font-semibold text-slate-800">
+                      {order.startHours !== null && order.startHours !== undefined ? `${order.startHours} hrs` : "—"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-sans text-[11px] mr-1">Close:</span>
+                    <span className="font-semibold text-slate-800">
+                      {order.closeHours !== null && order.closeHours !== undefined ? `${order.closeHours} hrs` : "—"}
+                    </span>
+                  </div>
+                  {order.startHours !== null && order.startHours !== undefined && order.closeHours !== null && order.closeHours !== undefined && (
+                    <div className="bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                      <span className="text-blue-600 font-sans text-[11px] mr-1">Total Run:</span>
+                      <span className="font-bold text-blue-900">
+                        {Math.max(0, Number(order.closeHours) - Number(order.startHours)).toFixed(2).replace(/\.?0+$/, "")} hrs
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Inclusions */}
             <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2">
               <span className="text-xs text-slate-500 font-medium mr-1">
@@ -282,7 +343,7 @@ export function RentalOrderDetailsModal({
               {order.dieselIncluded ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
                   <Fuel className="w-3.5 h-3.5 text-amber-600" />
-                  Diesel Included
+                  Diesel Included{order.dieselValue ? ` (${order.dieselValue})` : ""}
                 </span>
               ) : null}
               {order.operatorIncluded ? (
@@ -327,7 +388,7 @@ export function RentalOrderDetailsModal({
                 <div className="flex items-center justify-between text-slate-600">
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    Security Deposit
+                    Advance Payment
                   </span>
                   <span className="font-semibold text-slate-900">
                     {formatINR(order.securityDeposit)}
@@ -344,6 +405,18 @@ export function RentalOrderDetailsModal({
               </div>
             </div>
           </div>
+
+          {/* Notes */}
+          {order.notes && (
+            <div className="border border-slate-200/80 rounded-xl p-4 bg-white">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                Note
+              </h4>
+              <div className="p-3 rounded-lg border border-slate-100 bg-slate-50 text-sm text-slate-700 whitespace-pre-wrap">
+                {order.notes}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer Actions */}

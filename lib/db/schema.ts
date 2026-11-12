@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, integer, numeric, timestamp, text, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, integer, numeric, timestamp, text, boolean, jsonb } from "drizzle-orm/pg-core";
 
 export const generators = pgTable("generators", {
   id: serial("id").primaryKey(),
@@ -22,6 +22,10 @@ export const generators = pgTable("generators", {
   location: varchar("location", { length: 255 }),
   driveLink: text("drive_link"),
   status: varchar("status", { length: 50 }).notNull().default("Available"),
+  buyingPersonName: varchar("buying_person_name", { length: 255 }),
+  buyingPersonPhone: varchar("buying_person_phone", { length: 50 }),
+  sellingPersonName: varchar("selling_person_name", { length: 255 }),
+  sellingPersonPhone: varchar("selling_person_phone", { length: 50 }),
   dailyRate: numeric("daily_rate", { precision: 10, scale: 2 }),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -53,12 +57,20 @@ export const rentals = pgTable("rentals", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export type Generator = typeof generators.$inferSelect;
+export type Generator = typeof generators.$inferSelect & {
+  currentLocation?: string | null;
+};
 export type NewGenerator = typeof generators.$inferInsert;
 export type Client = typeof clients.$inferSelect;
 export type NewClient = typeof clients.$inferInsert;
 export type Rental = typeof rentals.$inferSelect;
 export type NewRental = typeof rentals.$inferInsert;
+
+export interface AdditionalPerson {
+  name: string;
+  role?: string;
+  phone?: string;
+}
 
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
@@ -66,12 +78,15 @@ export const customers = pgTable("customers", {
   companyName: varchar("company_name", { length: 255 }).notNull(),
   gstNumber: varchar("gst_number", { length: 50 }),
   contactPerson: varchar("contact_person", { length: 255 }),
+  primaryPersonRole: varchar("primary_person_role", { length: 255 }),
   phone: text("phone"),
-  email: varchar("email", { length: 255 }),
+  additionalPersons: jsonb("additional_persons").$type<AdditionalPerson[]>().default([]),
+  email: text("email"),
   paymentTerms: varchar("payment_terms", { length: 100 }).default("Cash"),
   outstandingAmount: numeric("outstanding_amount", { precision: 12, scale: 2 }).default("0"),
   billingAddress: text("billing_address"),
   siteAddress: text("site_address"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -89,19 +104,25 @@ export const rentalOrders = pgTable("rental_orders", {
   generatorId: integer("generator_id").references(() => generators.id, { onDelete: "set null" }),
   generatorName: varchar("generator_name", { length: 255 }).notNull(),
   generatorKva: varchar("generator_kva", { length: 50 }),
+  dcNumber: varchar("dc_number", { length: 100 }),
+  ewayBill: varchar("eway_bill", { length: 100 }),
   startDate: varchar("start_date", { length: 50 }).notNull(),
   endDate: varchar("end_date", { length: 50 }).notNull(),
+  startHours: numeric("start_hours", { precision: 10, scale: 2 }),
+  closeHours: numeric("close_hours", { precision: 10, scale: 2 }),
   rentalType: varchar("rental_type", { length: 50 }).notNull().default("Monthly"),
   dailyRate: numeric("daily_rate", { precision: 10, scale: 2 }).notNull(),
   transportCharges: numeric("transport_charges", { precision: 10, scale: 2 }).default("0"),
   securityDeposit: numeric("security_deposit", { precision: 10, scale: 2 }).default("0"),
   dieselIncluded: boolean("diesel_included").default(false).notNull(),
+  dieselValue: varchar("diesel_value", { length: 255 }),
   operatorIncluded: boolean("operator_included").default(false).notNull(),
   rentalCharge: numeric("rental_charge", { precision: 12, scale: 2 }).notNull(),
   gstRate: numeric("gst_rate", { precision: 5, scale: 2 }).default("18"),
   gstAmount: numeric("gst_amount", { precision: 12, scale: 2 }).notNull(),
   totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull(),
   status: varchar("status", { length: 50 }).notNull().default("Active"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -153,7 +174,7 @@ export const maintenanceRecords = pgTable("maintenance_records", {
   id: serial("id").primaryKey(),
   generatorId: integer("generator_id").references(() => generators.id, { onDelete: "set null" }),
   generatorName: varchar("generator_name", { length: 255 }).notNull(),
-  serviceType: varchar("service_type", { length: 100 }).notNull(),
+  serviceType: text("service_type").notNull(),
   serviceDate: varchar("service_date", { length: 50 }).notNull(),
   technician: varchar("technician", { length: 255 }),
   cost: numeric("cost", { precision: 12, scale: 2 }).default("0").notNull(),
@@ -161,6 +182,7 @@ export const maintenanceRecords = pgTable("maintenance_records", {
   nextServiceHours: integer("next_service_hours").default(0).notNull(),
   notes: text("notes"),
   markAvailable: boolean("mark_available").default(false).notNull(),
+  pdfLink: text("pdf_link"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
